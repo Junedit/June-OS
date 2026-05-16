@@ -1,0 +1,10 @@
+688:                    onChange={(e) => {
+718:                onChange={(e) => {
+889:                         onChange={(e) => {
+900:                         onChange={(e) => {
+1317:                            onChange={async (e) => {
+3321:                  onChange={e => setEditTemplateName(e.target.value)}
+3328:                <SimpleWysiwyg value={editTemplateHtml} onChange={setEditTemplateHtml} availableVariables={AVAILABLE_VARIABLES} />
+3526:                  onChange={e => setEmailSubject(e.target.value)}
+3537:                  onChange={e => setEmailBody(e.target.value)}
+3548:                      onChange={e => setSaveTemplateName(e.target.value)}

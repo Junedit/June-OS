@@ -1,0 +1,155 @@
+                     <div className="flex flex-col h-full relative z-10 bg-[#050505]">
+                        {/* 1. Header: IDENTITY & CORE METRICS */}
+                        <div className="flex flex-col sm:flex-row items-stretch border-b border-zinc-800">
+                           <div className="flex items-center gap-5 p-6 sm:w-[45%] border-b sm:border-b-0 sm:border-r border-zinc-800 relative bg-[#010101]">
+                              <div className="relative shrink-0">
+                                {item.channelAvatar ? (
+                                   <img src={item.channelAvatar} alt={item.channelName} className="w-16 h-16 rounded-sm border border-zinc-700 object-cover" />
+                                ) : (
+                                   <div className="w-16 h-16 rounded-sm border border-zinc-700 bg-[#080808] flex items-center justify-center text-zinc-600">
+                                     <User size={24} />
+                                   </div>
+                                )}
+                                <div className="absolute -top-2.5 -left-2.5 bg-[#010101] max-w-[24px] text-white flex items-center justify-center font-mono text-[9px] font-bold px-1.5 py-0.5 z-10 border border-zinc-700">
+                                  {(currentPage - 1) * itemsPerPage + originalIndex + 1}
+                                </div>
+                              </div>
+                              <div className="flex flex-col min-w-0 pr-8">
+                                 <h4 className="text-lg font-headline font-bold text-white leading-tight truncate">{item.channelName}</h4>
+                                 <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1 mb-2.5">{item.subscriberCount} Subs</p>
+                                 <div className="flex flex-wrap gap-2">
+                                    {item.leadScore && (
+                                       <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm border ${item.leadScore.includes('A') ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : item.leadScore.includes('B') ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : item.leadScore.includes('C') ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                                         Score: {item.leadScore}
+                                       </span>
+                                    )}
+                                    {item.targetEditorRate && item.targetEditorRate !== 'Unknown' && (
+                                       <span className="text-[9px] font-bold uppercase tracking-widest bg-[var(--color-red)]/10 text-[var(--color-red)] px-2 py-0.5 rounded-sm border border-[var(--color-red)]/20 shadow-[0_0_10px_rgba(255,0,0,0.2)]">
+                                         Budget: {item.targetEditorRate}
+                                       </span>
+                                    )}
+                                 </div>
+                              </div>
+                           </div>
+                           {/* Financial / Growth Mini Dashboard */}
+                           <div className="flex-1 grid grid-cols-2 p-6 gap-y-5 gap-x-4 bg-zinc-900/40 relative">
+                              <div className="flex flex-col relative z-10">
+                                 <span className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mb-1">30D Views</span>
+                                 <span className="text-sm font-bold text-white font-mono">{item.thirtyDayViews || 'N/A'}</span>
+                              </div>
+                              <div className="flex flex-col relative z-10">
+                                 <span className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mb-1">Growth Rate</span>
+                                 <span className={`text-sm font-bold font-mono ${item.growthRate?.includes('-') ? 'text-red-400' : 'text-emerald-400'}`}>{item.growthRate || 'N/A'}</span>
+                              </div>
+                              <div className="flex flex-col relative z-10">
+                                 <span className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mb-1">Est. Monthly Rev</span>
+                                 <span className="text-sm font-bold text-emerald-400 font-mono">{item.estimatedRevenue || 'Unknown'}</span>
+                              </div>
+                              <div className="flex flex-col relative z-10">
+                                 <span className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mb-1">Upload Freq</span>
+                                 <span className="text-sm font-bold text-blue-400 font-mono">{item.uploadFrequency || 'Unknown'}</span>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* 2. Body: CONTENT INTELLIGENCE */}
+                        <div className="flex flex-col xl:flex-row flex-1">
+                           
+                           {/* Pain Points & Description (Left Col) */}
+                           <div className="flex flex-col w-full xl:w-[45%] border-b xl:border-b-0 xl:border-r border-zinc-800 p-6 gap-5 bg-[#030303]">
+                              <div className="flex flex-col">
+                                 <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 font-mono mb-2 flex items-center gap-2"><Brain size={12} className="text-emerald-400"/> Content Matrix</span>
+                                 <p className="text-[11px] text-zinc-400 leading-relaxed font-mono line-clamp-3">{item.description}</p>
+                              </div>
+                              <div className="bg-[var(--color-red)]/5 border border-[var(--color-red)]/20 rounded-sm p-4 flex flex-col gap-2 flex-1 relative overflow-hidden">
+                                 <div className="absolute top-0 left-0 w-1 bg-[var(--color-red)] h-full"></div>
+                                 <span className="font-bold text-[var(--color-red)] uppercase tracking-widest text-[9px] flex items-center gap-2"><Target size={12} /> Optimization Vectors (Pain Points)</span> 
+                                 <p className="text-[11px] text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap line-clamp-4">{item.contentFixes || 'Awaiting deep audit extraction...'}</p>
+                              </div>
+                           </div>
+
+                           {/* Deep Dive & Angles (Right Col) */}
+                           <div className="flex flex-col flex-1 p-6 gap-5 bg-black/40">
+                              <div className="flex flex-col h-1/2 min-h-[100px]">
+                                 <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 font-mono mb-3 flex items-center gap-2"><Search size={12} /> AI Deep Dive Context</span>
+                                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                                    <p className="text-[10px] font-mono text-zinc-400 leading-relaxed whitespace-pre-wrap">{item.deepDiveInfo || 'Run a deep audit to uncover advanced analytics and content context metrics.'}</p>
+                                 </div>
+                              </div>
+                              {item.pitchAngles && (
+                                 <div className="flex flex-col h-1/2 pt-5 border-t border-zinc-800 border-dashed min-h-[100px]">
+                                    <span className="font-bold text-blue-400 uppercase tracking-widest text-[9px] flex items-center gap-2 mb-3"><Sparkles size={12} /> Pitch Angles Framework</span> 
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                                       <p className="text-[10px] text-blue-400/80 font-mono leading-relaxed whitespace-pre-wrap">{item.pitchAngles}</p>
+                                    </div>
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+
+                        {/* 3. Footer: ACTIONS & CONNECTIVITY */}
+                        <div className="flex flex-col sm:flex-row items-center border-t border-zinc-800 bg-[#010101]">
+                           <div className="flex items-center p-4 h-full sm:w-[45%] border-b sm:border-b-0 sm:border-r border-zinc-800 gap-3 overflow-hidden bg-white/[0.02]">
+                              {item.publicEmail && item.publicEmail !== 'Unknown' && !item.publicEmail.toLowerCase().includes('hidden') ? (
+                                 <div className="flex items-center gap-4 w-full">
+                                    <div className="w-8 h-8 rounded-sm bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                                       <Mail size={14} className="text-emerald-400" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                       <span className="text-[8px] text-zinc-500 uppercase tracking-widest font-mono">Verified Contact</span>
+                                       <span className="text-xs text-white font-mono truncate">{item.publicEmail}</span>
+                                    </div>
+                                    <button 
+                                       onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(`mailto:${item.publicEmail}`);
+                                       }}
+                                       className="shrink-0 bg-transparent hover:bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 px-3 py-1.5 rounded-sm text-[10px] font-bold font-mono tracking-widest transition-colors flex items-center gap-1.5"
+                                    >
+                                       <Telescope size={12} /> DRAFT
+                                    </button>
+                                 </div>
+                              ) : (
+                                 <div className="flex items-center gap-4 w-full opacity-60">
+                                    <div className="w-8 h-8 rounded-sm bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                                       <AlertTriangle size={14} className="text-zinc-500" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                       <span className="text-[8px] text-zinc-500 uppercase tracking-widest font-mono">Status Warning</span>
+                                       <span className="text-xs text-zinc-400 font-mono truncate">Email hidden / Captcha gate</span>
+                                    </div>
+                                 </div>
+                              )}
+                           </div>
+                           <div className="flex flex-1 w-full max-w-full">
+                              <button 
+                                 onClick={(e) => { e.stopPropagation(); if(item.channelUrl) window.open(item.channelUrl); }} 
+                                 className="flex-1 py-4 text-[10px] font-mono text-zinc-500 hover:text-white hover:bg-zinc-800 border-r border-zinc-800 transition-colors uppercase tracking-widest flex items-center justify-center gap-2"
+                              >
+                                 <ExternalLink size={14} /> Scan Source
+                              </button>
+                              <button 
+                                 onClick={(e) => { e.stopPropagation(); handleTriggerAIAnalysis(searchResultsIndex); }} 
+                                 disabled={auditLoading === searchResultsIndex}
+                                 className="flex-1 py-4 text-[10px] font-mono text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border-r border-zinc-800 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
+                              >
+                                 {auditLoading === searchResultsIndex ? (
+                                    <div className="w-3 h-3 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin"></div>
+                                 ) : (
+                                    <><Brain size={14} /> Extract Audit</>
+                                 )}
+                              </button>
+                              <button 
+                                 onClick={(e) => { e.stopPropagation(); handleGeneratePitch(searchResultsIndex); }} 
+                                 disabled={pitchLoading === searchResultsIndex}
+                                 className="flex-1 py-4 text-[10px] font-mono text-[var(--color-red)] hover:text-white hover:bg-[var(--color-red)]/10 bg-[var(--color-red)]/5 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
+                              >
+                                 {pitchLoading === searchResultsIndex ? (
+                                    <div className="w-3 h-3 border-2 border-[var(--color-red)]/20 border-t-[var(--color-red)] rounded-full animate-spin"></div>
+                                 ) : (
+                                    <><FileText size={14} /> Generate Protocol</>
+                                 )}
+                              </button>
+                           </div>
+                        </div>
+                     </div>

@@ -1,0 +1,12 @@
+95:  const [livePreviewData, setLivePreviewData] = useState<any>({ amount: 0, invoiceNumber: "INV-001", terms: "Payment is due within 30 days of the invoice date.\nLate payments are subject to a 1.5% monthly fee.\nPlease make checks payable to Junedit Design OR pay online via the attached links.", welcomeMessage: "Thank you for choosing us for this project!", additionalNotes: "We appreciate your business!" });
+1315:const previewData = generatedInvoiceData || livePreviewData || {};
+1444:                                  filename:     `Invoice-${livePreviewData?.invoiceNumber || 'draft'}.pdf`,
+3155:                 <a href={pdfPreviewUrl} download={"Invoice-" + (livePreviewData?.invoiceNumber || 'draft') + ".pdf"} className="bg-white text-black px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-zinc-200 transition">
+3285:                              {key:"{invoiceNumber}", val: livePreviewData?.invoiceNumber},
+3286:                              {key:"{clientName}", val: livePreviewData?.clientName},
+3287:                              {key:"{senderName}", val: livePreviewData?.senderName},
+3288:                              {key:"{amount}", val: livePreviewData?.amount}
+3312:                     <input value={livePreviewData?.email || ""} readOnly className="w-full bg-[#111] border border-zinc-800 rounded p-3 text-sm text-white focus:outline-none cursor-not-allowed opacity-50" />
+3313:                     {!livePreviewData?.email && <p className="text-xs text-red-400 mt-1">Please enter an email in the invoice editor.</p>}
+3329:                     <button type="button" disabled={!livePreviewData?.email} onClick={() => {
+3330:                        toast.success("Invoice sent to " + (livePreviewData?.email || "client"));

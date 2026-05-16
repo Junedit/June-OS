@@ -1,0 +1,474 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn(); }
+
+    // Validation Blueprint for Lead
+    function isValidLead(data) {
+      let hasCore = data.keys().hasAll(['brandName', 'contactName', 'contactEmail', 'budget', 'message', 'status', 'ownerId', 'createdAt']);
+      
+      let validCore = data.brandName is string && data.brandName.size() <= 200 &&
+             data.contactName is string && data.contactName.size() <= 200 &&
+             data.contactEmail is string && data.contactEmail.size() <= 200 &&
+             data.budget is number && data.budget >= 0 &&
+             data.message is string && data.message.size() <= 10000 &&
+             data.status in ['new', 'contacted', 'negotiating', 'closed'] &&
+             data.ownerId is string && data.ownerId.size() > 0 && data.ownerId.size() <= 128 &&
+             data.createdAt is timestamp;
+
+      let validPackages = !('packages' in data) || (data.packages is list && data.packages.size() <= 10);
+      let validKeySize = data.keys().size() >= 8 && data.keys().size() <= 50;
+
+      let validExtensions = (!('companyUrl' in data) || (data.companyUrl is string && data.companyUrl.size() <= 500)) &&
+                            (!('timeline' in data) || (data.timeline is string && data.timeline.size() <= 100)) &&
+                            (!('followUpDate' in data) || data.followUpDate == null || data.followUpDate is timestamp) &&
+                            (!('reviewVideoUrl' in data) || data.reviewVideoUrl is string) &&
+                            (!('rawFootageUrl' in data) || data.rawFootageUrl is string) &&
+                            (!('projectFilesUrl' in data) || data.projectFilesUrl is string) &&
+                            (!('masterFileUrl' in data) || data.masterFileUrl is string) &&
+                            (!('niche' in data) || data.niche is string) &&
+                            (!('qualityScore' in data) || data.qualityScore is number) &&
+                            (!('distressSignal' in data) || data.distressSignal is bool) &&
+                            (!('hasFollowupDaemonTriggered' in data) || data.hasFollowupDaemonTriggered is bool) &&
+                            (!('socialsEnriched' in data) || data.socialsEnriched is bool) &&
+                            (!('enrichmentFailed' in data) || data.enrichmentFailed is bool) &&
+                            (!('enrichedData' in data) || data.enrichedData is map) &&
+                            (!('scoreContext' in data) || data.scoreContext is string) &&
+                            (!('deepIntel' in data) || data.deepIntel is string) &&
+                            (!('feedbackAnalyzedAt' in data) || data.feedbackAnalyzedAt is number) &&
+                            (!('autoDraftedReply' in data) || data.autoDraftedReply is string) &&
+                            (!('suggestedImprovements' in data) || data.suggestedImprovements is list) &&
+                            (!('predictedLTV' in data) || data.predictedLTV is string) &&
+                            (!('hiringIntent' in data) || data.hiringIntent is string) &&
+                            (!('estimatedUpsideValue' in data) || data.estimatedUpsideValue is string) &&
+                            (!('zoomTranscript' in data) || data.zoomTranscript is string) &&
+                            (!('aiSummary' in data) || data.aiSummary is string) &&
+                            (!('caseStudy1Title' in data) || data.caseStudy1Title is string) &&
+                            (!('caseStudy1Text' in data) || data.caseStudy1Text is string) &&
+                            (!('caseStudy2Title' in data) || data.caseStudy2Title is string) &&
+                            (!('caseStudy2Stat' in data) || data.caseStudy2Stat is string) &&
+                            (!('caseStudy2Text' in data) || data.caseStudy2Text is string) &&
+                            (!('caseStudy3Title' in data) || data.caseStudy3Title is string) &&
+                            (!('caseStudy3Stat' in data) || data.caseStudy3Stat is string) &&
+                            (!('caseStudy3Text' in data) || data.caseStudy3Text is string) &&
+                            (!('testimonialQuote' in data) || data.testimonialQuote is string) &&
+                            (!('testimonialAuthor' in data) || data.testimonialAuthor is string) &&
+                            (!('testimonialSource' in data) || data.testimonialSource is string) &&
+                            (!('targetRetentionRate' in data) || data.targetRetentionRate is string) &&
+                            (!('aiAudit' in data) || data.aiAudit is string) &&
+                            (!('salesRoomViews' in data) || data.salesRoomViews is number) &&
+                            (!('salesRoomLastVisitedAt' in data) || data.salesRoomLastVisitedAt is timestamp);
+
+      let validAssets = (!('tasks' in data) || data.tasks is map) &&
+                        (!('customTasks' in data) || data.customTasks is list) &&
+                        (!('uploadedAssets' in data) || data.uploadedAssets is list) &&
+                        (!('feedback' in data) || data.feedback is list) &&
+                        (!('trackerSteps' in data) || data.trackerSteps is map) &&
+                        (!('pitchVariants' in data) || data.pitchVariants is map) &&
+                        (!('telemetryEvents' in data) || data.telemetryEvents is list) &&
+                        (!('updatedAt' in data) || data.updatedAt is timestamp);
+
+      return hasCore && validCore && validPackages && validExtensions && validAssets && validKeySize;
+    }
+
+    // Define allowed actions for updates
+    function isLeadUpdateAction() {
+      return incoming().diff(existing()).affectedKeys().hasAny(['status', 'followUpDate', 'reviewVideoUrl', 'tasks', 'trackerSteps', 'brandName', 'contactName', 'contactEmail', 'budget', 'message', 'companyUrl', 'timeline', 'customTasks', 'rawFootageUrl', 'projectFilesUrl', 'masterFileUrl', 'niche', 'qualityScore', 'estimatedUpsideValue', 'hiringIntent', 'distressSignal', 'hasFollowupDaemonTriggered', 'predictedLTV', 'uploadedAssets', 'pitchVariants', 'telemetryEvents', 'updatedAt', 'zoomTranscript', 'aiSummary', 'caseStudy1Title', 'caseStudy1Text', 'caseStudy2Title', 'caseStudy2Stat', 'caseStudy2Text', 'caseStudy3Title', 'caseStudy3Stat', 'caseStudy3Text', 'testimonialQuote', 'testimonialAuthor', 'testimonialSource', 'targetRetentionRate', 'aiAudit', 'socialsEnriched', 'enrichmentFailed', 'enrichedData', 'scoreContext', 'deepIntel', 'feedbackAnalyzedAt', 'autoDraftedReply', 'suggestedImprovements']);
+    }
+
+    function isClientFeedbackAction() {
+      return incoming().diff(existing()).affectedKeys().hasAny(['feedback', 'telemetryEvents']);
+    }
+
+    function isClientSalesRoomAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['salesRoomViews', 'salesRoomLastVisitedAt']);
+    }
+
+    // Validation Blueprint for Note
+    function isValidNote(data, expectedLeadId) {
+      return data.keys().hasAll(['text', 'createdAt', 'ownerId', 'leadId']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 6 &&
+             data.text is string && data.text.size() > 0 && data.text.size() <= 50000 &&
+             (!('type' in data) || (data.type is string && data.type.size() <= 50)) &&
+             (!('metadata' in data) || (data.metadata is string && data.metadata.size() <= 200)) &&
+             data.ownerId is string && data.ownerId == request.auth.uid &&
+             data.leadId is string && data.leadId == expectedLeadId &&
+             data.createdAt is timestamp;
+    }
+
+    // Validation Blueprint for User
+    function isValidUser(data) {
+      let coreValid = data.keys().hasAll(['email', 'role', 'createdAt']);
+      let validRole = data.role in ['owner', 'member'];
+      let validEmail = data.email is string && data.email.size() <= 200;
+      let validDisplayName = !('displayName' in data) || data.displayName == null || (data.displayName is string && data.displayName.size() <= 200);
+      
+      return coreValid && validRole && validEmail && validDisplayName;
+    }
+
+    // Validation Blueprint for Proposal
+    function isValidProposal(data) {
+      let hasCore = data.keys().hasAll(['title', 'status', 'amount', 'content', 'ownerId', 'createdAt']);
+      let validCore = data.title is string && data.title.size() <= 300 &&
+                      data.status in ['draft', 'sent', 'signed', 'rejected'] &&
+                      data.amount is number && data.amount >= 0 &&
+                      data.content is string && data.content.size() <= 50000 &&
+                      data.ownerId is string && data.ownerId.size() > 0 && data.ownerId.size() <= 128 &&
+                      data.createdAt is timestamp;
+      let validSignedAt = !('signedAt' in data) || (data.signedAt is string && data.signedAt.size() <= 50);
+      let validViewMetrics = (!('viewCount' in data) || data.viewCount is number) &&
+                             (!('lastViewedAt' in data) || data.lastViewedAt is timestamp);
+                             
+      let validAuto = (!('automationTriggered' in data) || data.automationTriggered is bool) &&
+                      (!('contractId' in data) || data.contractId is string) &&
+                      (!('leadId' in data) || data.leadId is string) &&
+                      (!('clientName' in data) || data.clientName is string) &&
+                      (!('contactEmail' in data) || data.contactEmail is string) &&
+                      (!('brandName' in data) || data.brandName is string);
+                      
+      let validUpd = !('updatedAt' in data) || data.updatedAt is timestamp;
+      
+      let validKeySize = data.keys().size() >= 6 && data.keys().size() <= 16;
+      return hasCore && validCore && validSignedAt && validViewMetrics && validAuto && validUpd && validKeySize;
+    }
+
+    function isProposalClientSignAction() {
+      return incoming().diff(existing()).affectedKeys().hasAny(['status', 'signedAt', 'viewCount', 'lastViewedAt']);
+    }
+
+    function isContractClientSignAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['status', 'signatoryName', 'signatoryEmail', 'signedAt', 'updatedAt']);
+    }
+
+    // Validation Blueprint for Contract
+    function isValidContract(data) {
+      let hasCore = data.keys().hasAll(['title', 'clientName', 'content', 'status', 'ownerId', 'createdAt']);
+      let validCore = data.title is string && data.title.size() <= 300 &&
+                      data.clientName is string && data.clientName.size() <= 200 &&
+                      data.content is string && data.content.size() <= 50000 &&
+                      data.status in ['draft', 'sent', 'signed', 'rejected'] &&
+                      data.ownerId is string && data.ownerId.size() > 0 && data.ownerId.size() <= 128 &&
+                      data.createdAt is timestamp;
+      let validUpd = !('updatedAt' in data) || data.updatedAt is timestamp;
+      
+      let validSigName = !('signatoryName' in data) || (data.signatoryName is string && data.signatoryName.size() <= 200);
+      let validSigEmail = !('signatoryEmail' in data) || (data.signatoryEmail is string && data.signatoryEmail.size() <= 200);
+      let validSignedAt = !('signedAt' in data) || (data.signedAt is timestamp || data.signedAt is string);
+      let validProposalId = !('proposalId' in data) || (data.proposalId is string);
+
+      let validKeySize = data.keys().size() >= 6 && data.keys().size() <= 12;
+      return hasCore && validCore && validUpd && validSigName && validSigEmail && validSignedAt && validProposalId && validKeySize;
+    }
+
+    match /folders/{folderId} {
+      allow create: if isVerified() && incoming().ownerId == request.auth.uid;
+      allow read, delete, update: if isVerified() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+      
+      allow update: if isSignedIn() && isValidUser(incoming()) && (
+        (request.auth.uid == userId && incoming().diff(existing()).affectedKeys().hasOnly(['displayName'])) ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner' && incoming().diff(existing()).affectedKeys().hasOnly(['role'])) ||
+        (request.auth.uid == userId && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner') ||
+        (request.auth.uid == userId && request.auth.token.firebase.sign_in_provider == 'password' && incoming().diff(existing()).affectedKeys().hasOnly(['role']))
+      );
+    }
+
+    match /leads/{leadId} {
+      allow create: if isValidId(leadId) &&
+                    isValidLead(incoming()) &&
+                    incoming().createdAt == request.time;
+      
+      // Allow unauthenticated gets for the client portal. Unlisted URL approach.
+      allow get: if isValidId(leadId);
+      allow list: if isVerified() && resource.data.ownerId == request.auth.uid;
+
+      allow update: if isValidId(leadId) &&
+                    isValidLead(incoming()) &&
+                    incoming().ownerId == existing().ownerId &&
+                    incoming().createdAt == existing().createdAt &&
+                    (
+                      (isVerified() && existing().ownerId == request.auth.uid && isLeadUpdateAction()) ||
+                      isClientFeedbackAction() ||
+                      isClientSalesRoomAction()
+                    );
+                    
+      allow delete: if isVerified() && isValidId(leadId) && existing().ownerId == request.auth.uid;
+
+      match /notes/{noteId} {
+        allow create: if isVerified() &&
+                      isValidId(noteId) &&
+                      isValidNote(incoming(), leadId) &&
+                      incoming().createdAt == request.time &&
+                      // Enforce relational sync: Must be the owner of the parent lead
+                      get(/databases/$(database)/documents/leads/$(leadId)).data.ownerId == request.auth.uid;
+                      
+        allow read: if isVerified() && resource.data.ownerId == request.auth.uid;
+        allow update, delete: if false; // Notes are immutable
+      }
+
+      match /messages/{messageId} {
+        allow read, write: if isValidId(leadId); // Consider restricting to owner/client in production
+      }
+
+      match /video_comments/{commentId} {
+        allow read, write: if isValidId(leadId); // Consider restricting to owner/client in production
+      }
+
+      match /session/{sessionId} {
+        allow read, write: if isValidId(leadId);
+      }
+    }
+    function isValidSetting(data, userId) {
+      let coreValid = data.keys().hasAll(['ownerId', 'displayName', 'bio', 'packages']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 30 &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.bio is string && data.bio.size() <= 500 &&
+             data.packages is list && data.packages.size() <= 20;
+             
+      let validThemeFields = (!('themeColor' in data) || (data.themeColor is string && data.themeColor.size() <= 50)) &&
+                             (!('themeHeroUrl' in data) || (data.themeHeroUrl is string && data.themeHeroUrl.size() <= 1000));
+                             
+      let validLinks = (!('calendarUrl' in data) || (data.calendarUrl is string && data.calendarUrl.size() <= 500)) &&
+                       (!('paymentLink' in data) || (data.paymentLink is string && data.paymentLink.size() <= 500)) &&
+                       (!('stripeLink' in data) || (data.stripeLink is string && data.stripeLink.size() <= 500)) &&
+                       (!('paypalLink' in data) || (data.paypalLink is string && data.paypalLink.size() <= 500)) &&
+                       (!('wiseLink' in data) || (data.wiseLink is string && data.wiseLink.size() <= 500)) &&
+                       (!('portalLogoUrl' in data) || (data.portalLogoUrl is string && data.portalLogoUrl.size() <= 1000)) &&
+                       (!('portalAgencyName' in data) || (data.portalAgencyName is string && data.portalAgencyName.size() <= 100)) &&
+                       (!('websiteUrl' in data) || (data.websiteUrl is string && data.websiteUrl.size() <= 500)) &&
+                       (!('instagramHandle' in data) || (data.instagramHandle is string && data.instagramHandle.size() <= 100)) &&
+                       (!('twitterHandle' in data) || (data.twitterHandle is string && data.twitterHandle.size() <= 100)) &&
+                       (!('youtubeUrl' in data) || (data.youtubeUrl is string && data.youtubeUrl.size() <= 500)) &&
+                       (!('defaultInvoiceTemplate' in data) || (data.defaultInvoiceTemplate is string && data.defaultInvoiceTemplate.size() <= 100));
+                       
+      let validLists = (!('portfolioLinks' in data) || (data.portfolioLinks is list && data.portfolioLinks.size() <= 10));
+      
+      return coreValid && validThemeFields && validLinks && validLists;
+    }
+
+    
+    function isValidExpense(data, userId) {
+      return data.keys().hasAll(['name', 'amount', 'ownerId', 'createdAt']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 5 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.amount is number && data.amount >= 0 &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.createdAt is timestamp;
+    }
+
+    match /invoices/{invoiceId} {
+      allow read, delete: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(invoiceId) && incoming().ownerId == request.auth.uid;
+      allow update: if isVerified() && isValidId(invoiceId) && resource.data.ownerId == request.auth.uid && incoming().ownerId == request.auth.uid;
+    }
+
+    match /expenses/{expenseId} {
+      allow list, get: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(expenseId) &&
+                    isValidExpense(incoming(), request.auth.uid) &&
+                    incoming().createdAt == request.time;
+      allow delete: if isVerified() && isValidId(expenseId) &&
+                    resource.data.ownerId == request.auth.uid;
+    }
+
+    function isValidProject(data, userId) {
+      return data.keys().hasAll(['title', 'brandName', 'status', 'deliveryStage', 'ownerId', 'createdAt']) &&
+             data.title is string && data.title.size() <= 300 &&
+             data.brandName is string && data.brandName.size() <= 200 &&
+             data.status is string && data.status.size() <= 50 &&
+             data.deliveryStage is string && data.deliveryStage.size() <= 50 &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.createdAt is timestamp &&
+             (!('dueDate' in data) || data.dueDate is string || data.dueDate is timestamp) &&
+             (!('budget' in data) || data.budget is number) &&
+             (!('brandAssetsUrl' in data) || data.brandAssetsUrl is string) &&
+             (!('questionnaireAnswers' in data) || data.questionnaireAnswers is string) &&
+             data.keys().size() >= 6 && data.keys().size() <= 12;
+    }
+
+    // Projects need to allow client updates for onboarding
+    function isProjectClientOnboardingAction() {
+      return incoming().diff(existing()).affectedKeys().hasAny(['brandAssetsUrl', 'questionnaireAnswers', 'deliveryStage', 'updatedAt']);
+    }
+
+    match /projects/{projectId} {
+      // Allow unauthenticated gets for client portal access
+      allow get: if isValidId(projectId);
+      allow read, delete: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(projectId) && isValidProject(incoming(), request.auth.uid) && incoming().createdAt == request.time;
+      allow update: if isVerified() && isValidId(projectId) && resource.data.ownerId == request.auth.uid && isValidProject(incoming(), request.auth.uid) || isProjectClientOnboardingAction();
+    }
+
+    match /proposals/{proposalId} {
+      allow create: if isVerified() && isValidId(proposalId) && isValidProposal(incoming()) && incoming().createdAt == request.time && incoming().ownerId == request.auth.uid;
+      allow get: if isValidId(proposalId);
+      allow list: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow update: if isValidId(proposalId) && isValidProposal(incoming()) && incoming().createdAt == resource.data.createdAt && incoming().ownerId == resource.data.ownerId &&
+        (
+          (isVerified() && request.auth.uid == resource.data.ownerId) ||
+          isProposalClientSignAction()
+        );
+      allow delete: if isVerified() && isValidId(proposalId) && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /contracts/{contractId} {
+      allow create: if isVerified() && isValidId(contractId) && isValidContract(incoming()) && incoming().createdAt == request.time && incoming().ownerId == request.auth.uid;
+      allow get: if isValidId(contractId);
+      allow list: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow update: if isValidId(contractId) && isValidContract(incoming()) && incoming().createdAt == resource.data.createdAt && incoming().ownerId == resource.data.ownerId &&
+                    (
+                      (isVerified() && request.auth.uid == resource.data.ownerId) ||
+                      isContractClientSignAction()
+                    );
+      allow delete: if isVerified() && isValidId(contractId) && resource.data.ownerId == request.auth.uid;
+    }
+
+    function isValidActivity(data, userId) {
+      return data.keys().hasAll(['text', 'type', 'ownerId', 'createdAt']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 6 &&
+             data.text is string && data.text.size() <= 1000 &&
+             data.type is string && data.type.size() <= 100 &&
+             (!('metadata' in data) || (data.metadata is string && data.metadata.size() <= 200)) &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.createdAt is timestamp;
+    }
+    
+    function isValidDeliverable(data, userId) {
+      return data.keys().hasAll(['title', 'videoUrl', 'projectId', 'status', 'ownerId', 'createdAt']) &&
+             data.keys().size() >= 6 && data.keys().size() <= 9 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.videoUrl is string && data.videoUrl.size() <= 1000 &&
+             data.projectId is string && data.projectId.size() <= 128 &&
+             data.status in ['pending', 'approved', 'changes_requested'] &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.createdAt is timestamp &&
+             (!('clientFeedback' in data) || data.clientFeedback is string) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+    
+    function isDeliverableClientFeedbackAction() {
+       return incoming().diff(existing()).affectedKeys().hasAny(['status', 'clientFeedback', 'updatedAt']);
+    }
+    
+    match /deliverables/{deliverableId} {
+      allow list: if isVerified() && resource.data.ownerId == request.auth.uid;
+      // Allow getting by ID for the client portal
+      allow get: if isValidId(deliverableId);
+      allow create: if isVerified() && isValidId(deliverableId) && isValidDeliverable(incoming(), request.auth.uid) && incoming().createdAt == request.time;
+      allow update: if isVerified() && isValidId(deliverableId) && resource.data.ownerId == request.auth.uid && isValidDeliverable(incoming(), request.auth.uid) || isDeliverableClientFeedbackAction();
+      allow delete: if isVerified() && isValidId(deliverableId) && resource.data.ownerId == request.auth.uid;
+    }
+
+    function isValidSequence(data, userId) {
+      return data.keys().hasAll(['name', 'steps', 'ownerId', 'createdAt']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 6 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.steps is list && data.steps.size() <= 50 &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.createdAt is timestamp &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp) &&
+             (!('activeLeadsCount' in data) || data.activeLeadsCount is number);
+    }
+
+    match /sequences/{sequenceId} {
+      allow read, delete: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(sequenceId) && isValidSequence(incoming(), request.auth.uid) && incoming().createdAt == request.time;
+      allow update: if isVerified() && isValidId(sequenceId) && resource.data.ownerId == request.auth.uid && isValidSequence(incoming(), request.auth.uid);
+    }
+
+    function isValidNotification(data, userId) {
+      return data.keys().hasAll(['message', 'type', 'isRead', 'ownerId', 'createdAt']) &&
+             data.keys().size() >= 5 && data.keys().size() <= 7 &&
+             data.message is string && data.message.size() > 0 && data.message.size() <= 500 &&
+             data.type is string && data.type.size() <= 50 &&
+             data.isRead is bool &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.createdAt is timestamp &&
+             (!('link' in data) || data.link is string);
+    }
+
+    match /notifications/{notificationId} {
+      allow list, get: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(notificationId) && isValidNotification(incoming(), request.auth.uid) && incoming().createdAt == request.time;
+      allow update: if isVerified() && isValidId(notificationId) && resource.data.ownerId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['isRead', 'updatedAt']);
+      allow delete: if isVerified() && isValidId(notificationId) && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /activity_logs/{logId} {
+      allow list, get: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(logId) &&
+                    isValidActivity(incoming(), request.auth.uid) &&
+                    incoming().createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /settings/{userId} {
+      allow read: if true; // Publicly readable for the media kit
+      allow create, update: if isVerified() && 
+                            userId == request.auth.uid &&
+                            isValidSetting(incoming(), userId);
+    }
+    
+    function isValidEmailTemplate(data, userId) {
+      return data.keys().hasAll(['name', 'subject', 'body', 'ownerId', 'createdAt']) &&
+             data.keys().size() == 5 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.subject is string && data.subject.size() <= 200 &&
+             data.body is string && data.body.size() <= 5000 &&
+             data.ownerId is string && data.ownerId == userId &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidCustomInvoiceTemplate(data, userId) {
+      let hasRequired = data.keys().hasAll(['name', 'html', 'ownerId', 'createdAt']);
+      let validTypes = data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+                       data.html is string && data.html.size() <= 65536 &&
+                       data.ownerId == userId && data.createdAt is timestamp;
+      let validUpd = !('updatedAt' in data) || data.updatedAt is timestamp;
+      let validKeySize = data.keys().size() >= 4 && data.keys().size() <= 6;
+      return hasRequired && validTypes && validUpd && validKeySize;
+    }
+
+    match /customInvoiceTemplates/{templateId} {
+      allow read, delete: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(templateId) && 
+                    isValidCustomInvoiceTemplate(incoming(), request.auth.uid) &&
+                    incoming().createdAt == request.time;
+      allow update: if isVerified() && isValidId(templateId) && 
+                    isValidCustomInvoiceTemplate(incoming(), request.auth.uid) &&
+                    incoming().ownerId == resource.data.ownerId &&
+                    incoming().createdAt == resource.data.createdAt &&
+                    (!('updatedAt' in incoming()) || incoming().updatedAt == request.time) &&
+                    incoming().diff(resource.data).affectedKeys().hasOnly(['name', 'html', 'updatedAt']);
+    }
+
+    match /emailTemplates/{templateId} {
+      allow read, delete: if isVerified() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified() && isValidId(templateId) && 
+                    isValidEmailTemplate(incoming(), request.auth.uid) &&
+                    incoming().createdAt == request.time;
+      allow update: if isVerified() && isValidId(templateId) && 
+                    isValidEmailTemplate(incoming(), request.auth.uid) &&
+                    incoming().ownerId == resource.data.ownerId &&
+                    incoming().createdAt == resource.data.createdAt;
+    }
+  }
+}

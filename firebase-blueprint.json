@@ -1,0 +1,130 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "A business lead or sponsorship inquiry.",
+      "type": "object",
+      "properties": {
+        "brandName": { "type": "string", "description": "Name of the brand or company." },
+        "contactName": { "type": "string", "description": "Name of the contact person." },
+        "contactEmail": { "type": "string", "description": "Email of the contact." },
+        "budget": { "type": "number", "description": "Proposed budget." },
+        "message": { "type": "string", "description": "Message or inquiry details." },
+        "status": { "type": "string", "enum": ["new", "contacted", "negotiating", "closed"], "description": "Current status of the lead." },
+        "ownerId": { "type": "string", "description": "The user ID of the app owner receiving the lead." },
+        "createdAt": { "type": "timestamp" },
+        "followUpDate": { "type": "timestamp", "description": "Optional reminder date." }
+      },
+      "required": ["brandName", "contactName", "contactEmail", "budget", "message", "status", "ownerId", "createdAt"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "A chronological follow-up note for a lead.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "leadId": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["text", "ownerId", "leadId", "createdAt"]
+    },
+    "Proposal": {
+      "title": "Proposal",
+      "description": "A business contract or proposal.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "sent", "signed", "rejected"] },
+        "amount": { "type": "number" },
+        "content": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "signedAt": { "type": "string" }
+      },
+      "required": ["title", "status", "amount", "content", "ownerId", "createdAt"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "User configuration for media kit.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "bio": { "type": "string" },
+        "packages": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "price": { "type": "number" }, "description": { "type": "string" } } } },
+        "themeColor": { "type": "string", "description": "Theme color e.g. indigo, emerald" },
+        "themeHeroUrl": { "type": "string", "description": "Custom background image URL" }
+      },
+      "required": ["ownerId", "displayName", "bio", "packages"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user in the organization, having an owner or member role.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "member"] },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["email", "role", "createdAt"]
+    },
+    "EmailTemplate": {
+      "title": "Email Template",
+      "description": "Email templates for sending invoices.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "subject": { "type": "string" },
+        "body": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["name", "subject", "body", "ownerId", "createdAt"]
+    },
+    "CustomInvoiceTemplate": {
+      "title": "Custom Invoice Template",
+      "description": "User created invoice templates via WYSIWYG editor.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "html": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["name", "html", "ownerId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/customInvoiceTemplates/{templateId}": {
+      "schema": { "$ref": "#/entities/CustomInvoiceTemplate" },
+      "description": "Collection of custom invoice templates created by users."
+    },
+    "/emailTemplates/{templateId}": {
+      "schema": { "$ref": "#/entities/EmailTemplate" },
+      "description": "Collection of email templates."
+    },
+    "/leads/{leadId}": {
+      "schema": { "$ref": "#/entities/Lead" },
+      "description": "Collection of lead inquiries."
+    },
+    "/leads/{leadId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/Note" },
+      "description": "Subcollection of follow-up notes for a lead."
+    },
+    "/proposals/{proposalId}": {
+      "schema": { "$ref": "#/entities/Proposal" },
+      "description": "Collection of business proposals."
+    },
+    "/settings/{userId}": {
+      "schema": { "$ref": "#/entities/Setting" },
+      "description": "Collection of user configurations."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Collection of user roles and data."
+    }
+  }
+}

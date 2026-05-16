@@ -1,0 +1,316 @@
+1315:const previewData = generatedInvoiceData || livePreviewData || {};
+1316:const parsedAmount = Number(previewData?.amount || 0);
+1317:const parsedDiscount = Number(previewData?.discount || 0);
+1318:const parsedTaxRate = Number(previewData?.taxRate || 0);
+1319:const parsedAmountPaid = Number(previewData?.amountPaid || 0);
+1352:                                if (previewData?.id) {
+1355:                                      doc(db, "invoices", previewData.id),
+1358:                                    if (generatedInvoiceData && previewData.id === generatedInvoiceData.id) {
+1392:                              if (previewData?.id) {
+1395:                                    doc(db, "invoices", previewData.id),
+1398:                                  if (generatedInvoiceData && previewData.id === generatedInvoiceData.id) {
+1479:                          {Number(previewData.amountPaid || 0) <
+1480:                            Number(previewData.amount) && (
+1492:                                        amountPaid: previewData.amount,
+1497:                                      amountPaid: previewData.amount,
+1518:                              setEmailSubject(`Invoice ${previewData.invoiceNumber} from ${previewData.senderName || "JUNEDIT"}`);
+1519:                              setEmailBody(`Hi ${previewData.clientName || 'Valued Client'},\n\nPlease find your latest invoice (${previewData.invoiceNumber}) for ${getCurrencySymbol(previewData?.currency)}${Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})} attached.\n\nThank you,\n${previewData.senderName || "JUNEDIT"}`);
+1559:                          style={{ '--brandColor': getSafeColor(previewData?.brandColor || brandColor || '#ea0000') } as any}
+1564:                              --brandColor: ${getSafeColor(previewData?.brandColor || brandColor || '#ea0000')} !important;
+1572:                          {computedTotalDue > 0 && Number(previewData.amountPaid) > 0 && Number(previewData.amountPaid) >= computedTotalDue && (
+1586:                                  {previewData.logoUrl ? (
+1588:                                      <img src={previewData.logoUrl} alt="Logo" className="max-h-12 object-contain" />
+1592:                                      {previewData.senderName || "MY COMPANY"}
+1596:                                    <p>{previewData.senderName}</p>
+1597:                                    <p>{previewData.senderEmail}</p>
+1598:                                    <p className="whitespace-pre-wrap">{previewData.senderAddress}</p>
+1603:                                  <p className="text-zinc-500 font-medium text-lg mb-6">No. {previewData.invoiceNumber}</p>
+1606:                                    <span className="font-medium text-zinc-900">{formatInvoiceDate(previewData.date || previewData.createdAt)}</span>
+1608:                                    <span className="font-medium text-zinc-900">{previewData.dueDate || "Upon Receipt"}</span>
+1617:                                  <h4 className="text-xl font-bold text-zinc-900 mb-1">{previewData.clientName || "Valued Client"}</h4>
+1619:                                    <p>{previewData.email}</p>
+1620:                                    <p className="whitespace-pre-wrap">{previewData.clientAddress}</p>
+1641:                                            {getCurrencySymbol(previewData?.currency)}{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1644:                                            {getCurrencySymbol(previewData?.currency)}{(amount * qty).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1655:                                    {previewData.terms && (
+1658:                                        <p className="whitespace-pre-wrap">{previewData.terms}</p>
+1661:                                    {previewData.additionalNotes && (
+1664:                                        <p className="whitespace-pre-wrap">{previewData.additionalNotes}</p>
+1672:                                      <span className="font-medium">{getCurrencySymbol(previewData?.currency)}{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+1674:                                    {Number(previewData.discount) > 0 && (
+1677:                                        <span className="font-medium">-{getCurrencySymbol(previewData?.currency)}{Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1680:                                    {Number(previewData.taxRate) > 0 && (
+1682:                                        <span>Tax ({previewData.taxRate}%)</span>
+1683:                                        <span className="font-medium">{getCurrencySymbol(previewData?.currency)}{computedTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1686:                                    {Number(previewData.amountPaid) > 0 && (
+1689:                                        <span className="font-medium">-{getCurrencySymbol(previewData?.currency)}{Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1695:                                        {getCurrencySymbol(previewData?.currency)}{computedBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1710:                                  <p className="text-slate-500 font-sans tracking-widest uppercase text-xs mb-8 font-bold">Reference: <span onClick={() => document.getElementById('standalone-invoice')?.focus()} className="cursor-pointer hover:text-slate-800 transition-colors text-slate-900" title="Click to edit">{previewData.invoiceNumber}</span></p>
+1712:                                  {previewData.logoUrl ? (
+1714:                                      <img src={previewData.logoUrl} alt="Logo" className="max-h-16 object-contain" />
+1718:                                      {previewData.senderName || "My Corporate Entity"}
+1722:                                    {previewData.logoUrl && <p onClick={() => document.getElementById('standalone-senderName')?.focus()} className="cursor-pointer hover:text-slate-900 transition-colors font-medium text-slate-900" title="Click to edit">{previewData.senderName}</p>}
+1723:                                    <p onClick={() => document.getElementById('standalone-senderEmail')?.focus()} className="cursor-pointer hover:text-slate-900 transition-colors" title="Click to edit">{previewData.senderEmail}</p>
+1724:                                    <p onClick={() => document.getElementById('standalone-senderAddress')?.focus()} className="cursor-pointer hover:text-slate-900 transition-colors whitespace-pre-wrap" title="Click to edit">{previewData.senderAddress}</p>
+1731:                                      <p className="font-semibold text-slate-900">{formatInvoiceDate(previewData.date || previewData.createdAt)}</p>
+1735:                                      <p onClick={() => document.getElementById('standalone-dueDate')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity font-bold text-[var(--brandColor)]" title="Click to edit">{previewData.dueDate || "Upon Receipt"}</p>
+1739:                                      <p className="text-xl font-black text-slate-900">{getCurrencySymbol(previewData?.currency)}{computedBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+1749:                                  <h4 onClick={() => document.getElementById('standalone-clientName')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-2xl font-bold text-slate-900 mb-2" title="Click to edit">{previewData.clientName || "Valued Client"}</h4>
+1751:                                    <p onClick={() => document.getElementById('standalone-email')?.focus()} className="cursor-pointer hover:text-slate-900 transition-colors" title="Click to edit">{previewData.email}</p>
+1752:                                    <p onClick={() => document.getElementById('standalone-clientAddress')?.focus()} className="cursor-pointer hover:text-slate-900 transition-colors whitespace-pre-wrap" title="Click to edit">{previewData.clientAddress}</p>
+1774:                                            {getCurrencySymbol(previewData?.currency)}{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1777:                                            {getCurrencySymbol(previewData?.currency)}{(amount * qty).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1794:                                        <span className="font-medium text-slate-900">{getCurrencySymbol(previewData?.currency)}{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+1796:                                      {Number(previewData.discount) > 0 && (
+1799:                                          <span className="font-medium">-{getCurrencySymbol(previewData?.currency)}{Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1802:                                      {Number(previewData.taxRate) > 0 && (
+1804:                                          <span>Tax ({previewData.taxRate}%)</span>
+1805:                                          <span className="font-medium text-slate-900">{getCurrencySymbol(previewData?.currency)}{computedTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1808:                                      {Number(previewData.amountPaid) > 0 && (
+1811:                                          <span className="font-medium">-{getCurrencySymbol(previewData?.currency)}{Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1817:                                          {getCurrencySymbol(previewData?.currency)}{computedBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1825:                                {(previewData.terms || previewData.additionalNotes) && (
+1827:                                    {previewData.terms && (
+1830:                                        <div onClick={() => document.getElementById('standalone-terms')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity whitespace-pre-wrap" title="Click to edit">{previewData.terms}</div>
+1833:                                    {previewData.additionalNotes && (
+1836:                                        <div onClick={() => document.getElementById('standalone-additionalNotes')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity whitespace-pre-wrap" title="Click to edit">{previewData.additionalNotes}</div>
+1850:                                  {previewData.logoUrl ? (
+1851:                                    <img src={previewData.logoUrl} alt="Logo" className="max-h-10 object-contain mix-blend-multiply" />
+1854:                                      {previewData.senderName || "Company Name"}
+1858:                                    {previewData.logoUrl && <p onClick={() => document.getElementById('standalone-senderName')?.focus()} className="cursor-pointer hover:text-stone-800 transition-colors text-stone-900 font-medium" title="Click to edit">{previewData.senderName}</p>}
+1859:                                    <p onClick={() => document.getElementById('standalone-senderEmail')?.focus()} className="cursor-pointer hover:text-stone-800 transition-colors" title="Click to edit">{previewData.senderEmail}</p>
+1860:                                    <p onClick={() => document.getElementById('standalone-senderAddress')?.focus()} className="cursor-pointer hover:text-stone-800 transition-colors whitespace-pre-wrap" title="Click to edit">{previewData.senderAddress}</p>
+1866:                                  <p onClick={() => document.getElementById('standalone-invoice')?.focus()} className="cursor-pointer hover:text-stone-600 transition-colors text-3xl font-light tracking-tight text-stone-800 mb-8" title="Click to edit">#{previewData.invoiceNumber}</p>
+1871:                                      <p className="font-medium text-stone-900">{formatInvoiceDate(previewData.date || previewData.createdAt)}</p>
+1875:                                      <p onClick={() => document.getElementById('standalone-dueDate')?.focus()} className="cursor-pointer hover:text-[var(--brandColor)] transition-colors font-medium text-stone-900" title="Click to edit">{previewData.dueDate || "Upon Receipt"}</p>
+1884:                                <h4 onClick={() => document.getElementById('standalone-clientName')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-xl font-medium text-stone-900 mb-2" title="Click to edit">{previewData.clientName || "Valued Client"}</h4>
+1886:                                  <p onClick={() => document.getElementById('standalone-email')?.focus()} className="cursor-pointer hover:text-stone-800 transition-colors" title="Click to edit">{previewData.email}</p>
+1887:                                  <p onClick={() => document.getElementById('standalone-clientAddress')?.focus()} className="cursor-pointer hover:text-stone-800 transition-colors whitespace-pre-wrap max-w-xs" title="Click to edit">{previewData.clientAddress}</p>
+1907:                                          {qty !== 1 && <p className="text-stone-400 mt-1 text-xs">Qty: {qty} @ {getCurrencySymbol(previewData?.currency)}{amount}</p>}
+1910:                                          {getCurrencySymbol(previewData?.currency)}{(amount * qty).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1924:                                  {previewData.terms && (
+1927:                                      <div onClick={() => document.getElementById('standalone-terms')?.focus()} className="cursor-pointer hover:text-stone-700 transition-colors whitespace-pre-wrap max-w-sm" title="Click to edit">{previewData.terms}</div>
+1930:                                  {previewData.additionalNotes && (
+1933:                                      <div onClick={() => document.getElementById('standalone-additionalNotes')?.focus()} className="cursor-pointer hover:text-stone-700 transition-colors whitespace-pre-wrap max-w-sm" title="Click to edit">{previewData.additionalNotes}</div>
+1941:                                    <span>{getCurrencySymbol(previewData?.currency)}{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+1943:                                  {Number(previewData.discount) > 0 && (
+1946:                                      <span>-{getCurrencySymbol(previewData?.currency)}{Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1949:                                  {Number(previewData.taxRate) > 0 && (
+1951:                                      <span>Tax ({previewData.taxRate}%)</span>
+1952:                                      <span>{getCurrencySymbol(previewData?.currency)}{computedTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1955:                                  {Number(previewData.amountPaid) > 0 && (
+1958:                                      <span>-{getCurrencySymbol(previewData?.currency)}{Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+1964:                                      {getCurrencySymbol(previewData?.currency)}{computedBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+1995:                                    NO. {previewData.invoiceNumber}
+1999:                                  {previewData.logoUrl ? (
+2001:                                      <img src={previewData.logoUrl} alt="Logo" className="h-12 object-contain print:h-10 filter drop-shadow-lg" />
+2005:                                      {previewData.senderName || "JUNEDIT"}
+2012:                                    {previewData.senderEmail || 'hello@junedit.com'}
+2014:                                  {previewData.senderAddress && (
+2016:                                      {previewData.senderAddress}
+2022:                              {previewData.welcomeMessage && (
+2025:                                    "{previewData.welcomeMessage}"
+2040:                                    {previewData.clientName || "Valued Client"}
+2043:                                    {previewData.email}
+2045:                                  {previewData.clientAddress && (
+2047:                                      {previewData.clientAddress}
+2065:                                        {previewData.dueDate || "Upon Receipt"}
+2075:                                        {getCurrencySymbol(previewData?.currency)}
+2081:                                    {previewData.paymentLinks && Object.values(previewData.paymentLinks).some((v: any) => v.enabled) && (
+2083:                                      {previewData.paymentLinks.stripe?.enabled && previewData.paymentLinks.stripe?.url && (
+2084:                                        <a href={previewData.paymentLinks.stripe.url} target="_blank" rel="noreferrer" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-widest text-center transition-all shadow-lg shadow-indigo-900/50 flex items-center justify-center gap-2">
+2088:                                      {previewData.paymentLinks.paypal?.enabled && previewData.paymentLinks.paypal?.url && (
+2089:                                        <a href={previewData.paymentLinks.paypal.url} target="_blank" rel="noreferrer" className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-widest text-center transition-all shadow-lg shadow-yellow-900/50 flex items-center justify-center gap-2">
+2115:                                      {previewData.desc}
+2118:                                      {previewData.format && (
+2122:                                            {previewData.format}
+2126:                                      {previewData.revisions && (
+2130:                                            {previewData.revisions} Rev
+2138:                                      {getCurrencySymbol(previewData?.currency)}
+2139:                                      <span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+2145:                                    {Number(previewData.discount || 0) > 0 && (
+2149:                                          -{getCurrencySymbol(previewData?.currency)}
+2150:                                          {Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2154:                                    {Number(previewData.taxRate || 0) > 0 && (
+2156:                                        <p className="text-xs font-mono text-zinc-400 uppercase tracking-widest"><span onClick={() => document.getElementById('standalone-taxRate')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">Tax Rate ({previewData.taxRate}%)</span></p>
+2158:                                          {getCurrencySymbol(previewData?.currency)}
+2163:                                    {Number(previewData.amountPaid || 0) > 0 && (
+2167:                                          -{getCurrencySymbol(previewData?.currency)}
+2168:                                          {Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2178:                                  {previewData.terms && (
+2185:                                        {previewData.terms}
+2189:                                  {previewData.additionalNotes && (
+2196:                                        {previewData.additionalNotes}
+2225:                                       <span>SYS_ID: <span onClick={() => document.getElementById('standalone-invoice')?.focus()} className="cursor-pointer hover:text-black font-bold text-zinc-800 transition-colors" title="Click to edit">{previewData.invoiceNumber}</span></span>
+2227:                                       <span>REC_DATE: {formatInvoiceDate(previewData.date || previewData.createdAt)}</span>
+2231:                                      {previewData.logoUrl ? (
+2233:                                          <img src={previewData.logoUrl} alt="Logo" className="h-10 object-contain grayscale" />
+2237:                                          {previewData.senderName || "JUNEDIT"}
+2241:                                        {previewData.senderEmail || 'hello@junedit.com'}
+2243:                                      {previewData.senderAddress && (
+2245:                                          {previewData.senderAddress}
+2257:                                           {previewData.clientName || "Valued Client"}
+2260:                                           {previewData.email}
+2262:                                         {previewData.clientAddress && (
+2264:                                             {previewData.clientAddress}
+2273:                                            {previewData.dueDate || "Upon Receipt"}
+2280:                                            {getCurrencySymbol(previewData?.currency)}
+2296:                                                {previewData.desc}
+2299:                                                {previewData.format && (
+2302:                                                    <span className="text-xs font-bold text-[#1A1A1A]">{previewData.format}</span>
+2305:                                                {previewData.revisions && (
+2308:                                                    <span className="text-xs font-bold text-[#1A1A1A]">{previewData.revisions} Cycles</span>
+2315:                                                {getCurrencySymbol(previewData?.currency)}<span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:bg-zinc-100 p-1 -m-1" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2322:                                              <span>{getCurrencySymbol(previewData?.currency)}{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2324:                                            {Number(previewData.discount || 0) > 0 && (
+2327:                                                <span>-{getCurrencySymbol(previewData?.currency)}{Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+2330:                                            {Number(previewData.taxRate || 0) > 0 && (
+2332:                                                <span>Tax Assessment ({previewData.taxRate}%)</span>
+2333:                                                <span>{getCurrencySymbol(previewData?.currency)}{computedTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+2336:                                            {Number(previewData.amountPaid || 0) > 0 && (
+2339:                                                <span>-{getCurrencySymbol(previewData?.currency)}{Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+2347:                                {previewData.welcomeMessage && (
+2351:                                       "{previewData.welcomeMessage}"
+2357:                                  {previewData.terms && (
+2364:                                          {previewData.terms}
+2368:                                  {previewData.additionalNotes && (
+2375:                                          {previewData.additionalNotes}
+2388:                                  {previewData.paymentLinks && Object.values(previewData.paymentLinks).some((v: any) => v.enabled) ? (
+2390:                                      {previewData.paymentLinks.stripe?.enabled && previewData.paymentLinks.stripe?.url && (
+2391:                                        <a href={previewData.paymentLinks.stripe.url} target="_blank" rel="noreferrer" className="bg-[#635BFF] hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-sm text-[10px] uppercase tracking-widest transition-all">
+2395:                                      {previewData.paymentLinks.paypal?.enabled && previewData.paymentLinks.paypal?.url && (
+2396:                                        <a href={previewData.paymentLinks.paypal.url} target="_blank" rel="noreferrer" className="bg-[#00457C] hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-sm text-[10px] uppercase tracking-widest transition-all">
+2402:                                    <a href={"mailto:" + (previewData.senderEmail || 'hello@junedit.com') + "?subject=Payment%20Arrangement"} className="bg-white hover:bg-zinc-200 text-[#1A1A1A] font-bold py-2.5 px-6 rounded-sm text-[10px] uppercase tracking-widest transition-all">
+2420:                                    Number: <span onClick={() => document.getElementById('standalone-invoice')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity font-bold text-white bg-white/10 px-2 py-0.5 rounded" title="Click to edit">{previewData.invoiceNumber}</span>
+2423:                                    Issued: <span className="text-white">{formatInvoiceDate(previewData.date || previewData.createdAt)}</span>
+2426:                                    Due: <span onClick={() => document.getElementById('standalone-dueDate')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity font-bold text-[var(--brandColor)] mix-blend-screen" title="Click to edit">{previewData.dueDate || "Upon Receipt"}</span>
+2430:                                  {previewData.logoUrl ? (
+2432:                                      <img src={previewData.logoUrl} alt="Logo" className="h-10 object-contain ml-auto print:h-8" />
+2436:                                      {previewData.senderName || "JUNEDIT"}
+2441:                                    {previewData.senderEmail || 'hello@junedit.com'}
+2443:                                  {previewData.senderAddress && (
+2445:                                      {previewData.senderAddress}
+2452:                                {previewData.welcomeMessage && (
+2455:                                      "{previewData.welcomeMessage}"
+2466:                                      {previewData.clientName || "Valued Client"}
+2469:                                      {previewData.email}
+2471:                                    {previewData.clientAddress && (
+2473:                                        {previewData.clientAddress}
+2480:                                        {getCurrencySymbol(previewData?.currency)}
+2498:                                            {previewData.desc}
+2501:                                            {previewData.format && (
+2503:                                                Format: {previewData.format}
+2506:                                            {previewData.revisions && (
+2508:                                                Revisions: {previewData.revisions}
+2514:                                          {getCurrencySymbol(previewData?.currency)}
+2515:                                          <span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2523:                                      {previewData.terms && (
+2527:                                            {previewData.terms}
+2531:                                      {previewData.additionalNotes && (
+2535:                                            {previewData.additionalNotes}
+2544:                                          {getCurrencySymbol(previewData?.currency)}
+2545:                                          {Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
+2548:                                      {Number(previewData.discount || 0) > 0 && (
+2552:                                            -{getCurrencySymbol(previewData?.currency)}
+2553:                                            {Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2557:                                      {Number(previewData.taxRate || 0) > 0 && (
+2559:                                          <span>Tax ({previewData.taxRate}%)</span>
+2561:                                            {getCurrencySymbol(previewData?.currency)}
+2566:                                      {Number(previewData.amountPaid || 0) > 0 && (
+2570:                                            -{getCurrencySymbol(previewData?.currency)}
+2571:                                            {Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2584:                                        {previewData.paymentLinks && Object.values(previewData.paymentLinks).some((v: any) => v.enabled) ? (
+2586:                                            {previewData.paymentLinks.stripe?.enabled && previewData.paymentLinks.stripe?.url && (
+2587:                                              <a href={previewData.paymentLinks.stripe.url} target="_blank" rel="noreferrer" className="bg-[#635BFF] hover:bg-[#524be0] text-white font-medium py-2.5 px-6 rounded-lg text-sm transition-all shadow-sm">
+2591:                                            {previewData.paymentLinks.paypal?.enabled && previewData.paymentLinks.paypal?.url && (
+2592:                                              <a href={previewData.paymentLinks.paypal.url} target="_blank" rel="noreferrer" className="bg-[#00457C] hover:bg-[#003865] text-white font-medium py-2.5 px-6 rounded-lg text-sm transition-all shadow-sm">
+2598:                                          <a href={"mailto:" + (previewData.senderEmail || 'hello@junedit.com') + "?subject=Payment%20Arrangement"} className="bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2.5 px-6 rounded-lg text-sm transition-all shadow-sm">
+2617:                                        <span onClick={() => document.getElementById('standalone-invoice')?.focus()} className="cursor-pointer hover:bg-zinc-200 transition-colors" title="Click to edit">{previewData.invoiceNumber}</span>
+2622:                                      <p className="text-sm font-bold text-black">{formatInvoiceDate(previewData.date || previewData.createdAt)}</p>
+2627:                                  {previewData.logoUrl ? (
+2629:                                      <img src={previewData.logoUrl} alt="Logo" className="h-12 object-contain ml-auto grayscale print:h-10" />
+2633:                                        {previewData.senderName || "JUNEDIT"}
+2638:                                    {previewData.senderEmail || 'hello@junedit.com'}
+2640:                                  {previewData.senderAddress && (
+2642:                                      {previewData.senderAddress}
+2655:                                      {previewData.clientName || "Valued Client"}
+2658:                                      {previewData.email}
+2660:                                    {previewData.clientAddress && (
+2662:                                        {previewData.clientAddress}
+2669:                                        {getCurrencySymbol(previewData?.currency)}
+2673:                                      Due by: <span onClick={() => document.getElementById('standalone-dueDate')?.focus()} className="cursor-pointer hover:bg-zinc-200 transition-colors bg-[var(--brandColor)] text-white px-2 py-1" title="Click to edit">{previewData.dueDate || "Upon Receipt"}</span>
+2678:                                {previewData.welcomeMessage && (
+2681:                                      {previewData.welcomeMessage}
+2695:                                        {previewData.desc}
+2698:                                        {previewData.format && (
+2701:                                            <p className="text-sm font-bold text-black bg-zinc-100 px-2 py-0.5 inline-block">{previewData.format}</p>
+2704:                                        {previewData.revisions && (
+2707:                                            <p className="text-sm font-bold text-black bg-zinc-100 px-2 py-0.5 inline-block">{previewData.revisions}</p>
+2714:                                        {getCurrencySymbol(previewData?.currency)}<span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:bg-zinc-100 p-1 -m-1" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2722:                                    {previewData.terms && (
+2726:                                          {previewData.terms}
+2730:                                    {previewData.additionalNotes && (
+2734:                                          {previewData.additionalNotes}
+2744:                                            {getCurrencySymbol(previewData?.currency)}
+2745:                                            {Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
+2748:                                       {Number(previewData.discount || 0) > 0 && (
+2752:                                                -{getCurrencySymbol(previewData?.currency)}
+2753:                                                {Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2757:                                       {Number(previewData.taxRate || 0) > 0 && (
+2759:                                             <span className="uppercase tracking-widest text-xs">Tax ({previewData.taxRate}%)</span>
+2761:                                                {getCurrencySymbol(previewData?.currency)}
+2766:                                       {Number(previewData.amountPaid || 0) > 0 && (
+2770:                                                -{getCurrencySymbol(previewData?.currency)}
+2771:                                                {Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2779:                                          {getCurrencySymbol(previewData?.currency)}
+2790:                                    {previewData.paymentLinks && Object.values(previewData.paymentLinks).some((v: any) => v.enabled) ? (
+2792:                                        {previewData.paymentLinks.stripe?.enabled && previewData.paymentLinks.stripe?.url && (
+2793:                                          <a href={previewData.paymentLinks.stripe.url} target="_blank" rel="noreferrer" className="bg-[#635BFF] hover:bg-white hover:text-[#635BFF] text-white font-black py-3 px-8 text-xs uppercase tracking-widest transition-all">
+2797:                                        {previewData.paymentLinks.paypal?.enabled && previewData.paymentLinks.paypal?.url && (
+2798:                                          <a href={previewData.paymentLinks.paypal.url} target="_blank" rel="noreferrer" className="bg-[#00457C] hover:bg-white hover:text-[#00457C] text-white font-black py-3 px-8 text-xs uppercase tracking-widest transition-all">
+2804:                                      <a href={"mailto:" + (previewData.senderEmail || 'hello@junedit.com') + "?subject=Payment%20Arrangement"} className="bg-white hover:bg-zinc-200 text-black font-black py-3 px-8 text-xs uppercase tracking-widest transition-all">
+2829:                                    {previewData.logoUrl ? (
+2831:                                        <img src={previewData.logoUrl} alt="Logo" className="h-12 object-contain ml-auto print:h-8" />
+2835:                                        {previewData.senderName || "JUNEDIT"}
+2839:                                      {previewData.senderEmail || 'hello@junedit.com'}
+2841:                                    {previewData.senderAddress && (
+2843:                                        {previewData.senderAddress}
+2853:                                       <span onClick={() => document.getElementById('standalone-invoice')?.focus()} className="cursor-pointer hover:text-[var(--brandColor)] transition-colors" title="Click to edit">{previewData.invoiceNumber}</span>
+2859:                                       {formatInvoiceDate(previewData.date || previewData.createdAt)}
+2865:                                       <span onClick={() => document.getElementById('standalone-dueDate')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{previewData.dueDate || "Upon Receipt"}</span>
+2871:                                        {getCurrencySymbol(previewData?.currency)}
+2883:                                      {previewData.clientName || "Valued Client"}
+2886:                                      {previewData.email}
+2888:                                    {previewData.clientAddress && (
+2890:                                        {previewData.clientAddress}
+2895:                                  {previewData.welcomeMessage && (
+2899:                                        "{previewData.welcomeMessage}"
+2914:                                        {previewData.desc}
+2917:                                        {previewData.format && (
+2919:                                            <span className="text-zinc-600 uppercase tracking-widest text-[9px] mr-2">Format</span>{previewData.format}
+2922:                                        {previewData.revisions && (
+2924:                                            <span className="text-zinc-600 uppercase tracking-widest text-[9px] mr-2">Revs</span>{previewData.revisions} included
+2930:                                      {getCurrencySymbol(previewData?.currency)}
+2931:                                      <span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2938:                                    {previewData.terms && (
+2942:                                          {previewData.terms}
+2946:                                    {previewData.additionalNotes && (
+2950:                                          {previewData.additionalNotes}
+2961:                                          {getCurrencySymbol(previewData?.currency)}
+2962:                                          {Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
+2965:                                      {Number(previewData.discount || 0) > 0 && (
+2969:                                            -{getCurrencySymbol(previewData?.currency)}
+2970:                                            {Number(previewData.discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2974:                                      {Number(previewData.taxRate || 0) > 0 && (
+2976:                                          <span>Tax ({previewData.taxRate}%)</span>
+2978:                                            {getCurrencySymbol(previewData?.currency)}
+2983:                                      {Number(previewData.amountPaid || 0) > 0 && (
+2987:                                            -{getCurrencySymbol(previewData?.currency)}
+2988:                                            {Number(previewData.amountPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+2996:                                        {getCurrencySymbol(previewData?.currency)}
+3007:                                  {previewData.paymentLinks && Object.values(previewData.paymentLinks).some((v: any) => v.enabled) ? (
+3009:                                      {previewData.paymentLinks.stripe?.enabled && previewData.paymentLinks.stripe?.url && (
+3010:                                        <a href={previewData.paymentLinks.stripe.url} target="_blank" rel="noreferrer" className="bg-[#635BFF] hover:bg-white hover:text-[#635BFF] text-white font-bold py-2.5 px-6 rounded text-sm transition-all border border-transparent">
+3014:                                      {previewData.paymentLinks.paypal?.enabled && previewData.paymentLinks.paypal?.url && (
+3015:                                        <a href={previewData.paymentLinks.paypal.url} target="_blank" rel="noreferrer" className="bg-[#00457C] hover:bg-white hover:text-[#00457C] text-white font-bold py-2.5 px-6 rounded text-sm transition-all border border-transparent">
+3021:                                    <a href={"mailto:" + (previewData.senderEmail || 'hello@junedit.com') + "?subject=Payment%20Arrangement"} className="bg-zinc-800 hover:bg-white text-zinc-100 hover:text-black font-bold py-2.5 px-6 rounded text-sm transition-all shadow border border-zinc-700">

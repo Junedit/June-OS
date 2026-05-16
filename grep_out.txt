@@ -1,0 +1,21 @@
+156:  useEffect(() => {
+157-    if (!user) return;
+158-
+159-    // Fetch user settings for default template
+160-    const fetchSettings = async () => {
+161-      try {
+162-        const docRef = doc(db, 'settings', user.uid);
+163-        const docSnap = await getDoc(docRef);
+164-        if (docSnap.exists()) {
+165-          const data = docSnap.data();
+166-          if (data.defaultInvoiceTemplate) {
+167-            setInvoiceTemplate(data.defaultInvoiceTemplate);
+168-          }
+169-        }
+170-      } catch (err) {
+171-        console.error("Failed to fetch settings", err);
+172-      }
+173-    };
+174-    fetchSettings();
+175-
+176-    const q = query(collection(db, "leads"), where("ownerId", "==", user.uid));

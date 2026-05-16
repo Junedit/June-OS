@@ -1,0 +1,347 @@
+        exp.category || "Other",
+      ]);
+    });
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `financials_export_${format(new Date(), "yyyy-MM-dd")}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  const updateLivePreview = React.useCallback(() => {
+    const getVal = (id: string) => (document.getElementById(id) as HTMLInputElement)?.value;
+    const inv = {
+--
+    const q = query(collection(db, "leads"), where("ownerId", "==", user.uid));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const fetchedLeads: any[] = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setLeads(fetchedLeads);
+
+        const closedLeads = fetchedLeads.filter((l) => l.status === "closed");
+
+        let totalRev = 0;
+        let mtdRev = 0;
+
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const revMap: Record<string, number> = {};
+
+        closedLeads.forEach((l) => {
+--
+    );
+
+    const unsubExpenses = onSnapshot(
+      expensesQ,
+      (snapshot) => {
+        const fetchedExpenses = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setExpenses(fetchedExpenses);
+
+        let totalExp = 0;
+        fetchedExpenses.forEach(
+          (e: any) => (totalExp += Number(e.amount || 0)),
+        );
+        setTotalExpenses(totalExp);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.LIST, "expenses");
+      },
+    );
+--
+      collection(db, "emailTemplates"),
+      where("ownerId", "==", user.uid)
+    );
+
+    const unsubEmailTemplates = onSnapshot(emailTemplatesQ, (snapshot) => {
+      setEmailTemplates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, "emailTemplates");
+    });
+
+    const customInvoiceTemplatesQ = query(
+      collection(db, "customInvoiceTemplates"),
+      where("ownerId", "==", user.uid)
+    );
+    const unsubCustomInvoiceTemplates = onSnapshot(customInvoiceTemplatesQ, (snapshot) => {
+      setCustomInvoiceTemplates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, "customInvoiceTemplates");
+    });
+
+    const unsubInvoices = onSnapshot(
+      invoicesQ,
+      (snapshot) => {
+        const fetchedInvoices = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        fetchedInvoices.sort((a: any, b: any) => {
+          const aTime = a.createdAt?.toMillis() || a.sentAt?.toMillis() || 0;
+          const bTime = b.createdAt?.toMillis() || b.sentAt?.toMillis() || 0;
+          return bTime - aTime;
+        });
+        setPastInvoices(fetchedInvoices);
+
+        let calculatedMrr = 0;
+        fetchedInvoices.forEach((inv: any) => {
+          if (
+            inv.isRecurring &&
+            inv.recurringSchedule &&
+--
+                        toast.success("Autofilled from lead");
+                      }
+                    }}
+                  >
+                    <option value="">Prefill from Lead...</option>
+                    {activeContracts.map(lead => (
+                      <option key={lead.id} value={lead.id}>{lead.brandName || lead.contactName || "Unnamed Lead"}</option>
+                    ))}
+                  </select>
+                  <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">
+                    Quick Generator
+                  </span>
+                </div>
+              </div>
+              <form
+                id="standalone-invoice-form"
+                className="p-4 border-t border-zinc-900"
+                onChange={(e) => {
+                  setIsStandaloneFormValid(e.currentTarget.checkValidity());
+                  debouncedUpdateLivePreview();
+                }}
+--
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-[10px] uppercase font-mono text-zinc-500 tracking-widest block text-white/50">
+                        Tax Rate (%) (Optional)
+                      </label>
+                      <div className="flex gap-1">
+                        {[0, 5, 10, 20].map(val => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => {
+                              const el = document.getElementById("standalone-taxRate") as HTMLInputElement;
+                              if (el) el.value = val.toString();
+                            }}
+                            className="text-[8px] bg-white/5 hover:bg-white/10 px-1 py-0.5 rounded text-white/50 uppercase"
+                          >
+                            {val}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <input
+--
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 sm:pb-0 hide-scrollbar scroll-smooth">
+                          {[
+                            { id: "modern", label: "Modern" },
+                            { id: "classic", label: "Corporate" },
+                            { id: "minimal", label: "Minimalist" },
+                          ].map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={async () => {
+                                setInvoiceTemplate(t.id as any);
+                                if (previewData?.id) {
+                                  try {
+                                    await updateDoc(
+                                      doc(db, "invoices", previewData.id),
+                                      { template: t.id },
+                                    );
+                                    if (generatedInvoiceData && previewData.id === generatedInvoiceData.id) {
+                                      setGeneratedInvoiceData({
+                                        ...generatedInvoiceData,
+                                        template: t.id,
+                                      });
+--
+                            }}
+                            className="bg-black border border-zinc-800 text-zinc-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full focus:outline-none focus:border-[var(--brandColor)] transition-colors min-w-[140px]"
+                          >
+                            <option value="" disabled className="italic">Custom...</option>
+                            <option value="create_new_custom">+ Create Custom</option>
+                            {customInvoiceTemplates.map(t => (
+                               <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                          </select>
+                          
+                          {customInvoiceTemplates.find(t => t.id === invoiceTemplate) && (
+                             <button
+                               onClick={() => {
+                                  const t = customInvoiceTemplates.find(t => t.id === invoiceTemplate);
+                                  if (t) {
+                                     setEditTemplateId(t.id);
+                                     setEditTemplateName(t.name);
+                                     setEditTemplateHtml(t.html);
+                                     setTemplateModalOpen(true);
+                                  }
+                               }}
+--
+                                    <div className="col-span-6 md:col-span-8">Description</div>
+                                    <div className="col-span-3 md:col-span-2 text-right">Amount</div>
+                                    <div className="col-span-3 md:col-span-2 text-right">Total</div>
+                                  </div>
+                                  <div className="space-y-4">
+                                    {lineItems.map((item: any) => {
+                                      const amount = Number(item.amount) || 0;
+                                      const qty = Number(item.quantity) || 1;
+                                      return (
+                                        <div key={item.id} className="grid grid-cols-12 gap-4 items-start text-sm">
+                                          <div className="col-span-6 md:col-span-8">
+                                            <p className="font-semibold text-zinc-900">{item.description || 'Item'}</p>
+                                          </div>
+                                          <div className="col-span-3 md:col-span-2 text-right text-zinc-600">
+                                            {getCurrencySymbol(previewData?.currency)}{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                          </div>
+                                          <div className="col-span-3 md:col-span-2 text-right font-medium text-zinc-900">
+                                            {getCurrencySymbol(previewData?.currency)}{(amount * qty).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                          </div>
+                                        </div>
+                                      );
+--
+                                    <div className="col-span-6 md:col-span-8">Description</div>
+                                    <div className="col-span-3 md:col-span-2 text-right">Price</div>
+                                    <div className="col-span-3 md:col-span-2 text-right">Amount</div>
+                                  </div>
+                                  <div className="divide-y divide-slate-100 font-sans">
+                                    {lineItems.map((item: any) => {
+                                      const amount = Number(item.amount) || 0;
+                                      const qty = Number(item.quantity) || 1;
+                                      return (
+                                        <div key={item.id} className="grid grid-cols-12 gap-4 items-center p-4 text-sm hover:bg-slate-50 transition-colors">
+                                          <div className="col-span-6 md:col-span-8">
+                                            <p className="font-semibold text-slate-900">{item.description || 'Service rendered'}</p>
+                                            {qty !== 1 && <p className="text-slate-400 mt-1 text-xs">Qty: {qty}</p>}
+                                          </div>
+                                          <div className="col-span-3 md:col-span-2 text-right text-slate-600">
+                                            {getCurrencySymbol(previewData?.currency)}{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                          </div>
+                                          <div className="col-span-3 md:col-span-2 text-right font-medium text-slate-900">
+                                            {getCurrencySymbol(previewData?.currency)}{(amount * qty).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                          </div>
+                                        </div>
+--
+                                    <div className="col-span-8 md:col-span-10">Description</div>
+                                    <div className="col-span-4 md:col-span-2 text-right">Amount</div>
+                                  </div>
+                                </div>
+                                <div className="space-y-4">
+                                  {lineItems.map((item: any) => {
+                                    const amount = Number(item.amount) || 0;
+                                    const qty = Number(item.quantity) || 1;
+                                    return (
+                                      <div key={item.id} className="grid grid-cols-12 gap-4 items-start text-sm">
+                                        <div className="col-span-8 md:col-span-10">
+                                          <p className="font-medium text-stone-800">{item.description || 'Item'}</p>
+                                          {qty !== 1 && <p className="text-stone-400 mt-1 text-xs">Qty: {qty} @ {getCurrencySymbol(previewData?.currency)}{amount}</p>}
+                                        </div>
+                                        <div className="col-span-4 md:col-span-2 text-right font-medium text-stone-900">
+                                          {getCurrencySymbol(previewData?.currency)}{(amount * qty).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  {lineItems.length === 0 && (
+--
+                          )}
+                          {invoiceTemplate === "creative" && (
+                            <div className="flex flex-col flex-1 bg-[#111111] text-zinc-100 relative overflow-hidden print:bg-white print:text-black">
+                              {/* Cinematic letterbox / Clapperboard top */}
+                              <div className="h-6 w-full flex">
+                                {[...Array(12)].map((_, i) => (
+                                  <div key={i} className={`flex-1 h-full ${i % 2 === 0 ? 'bg-white' : 'bg-black'}`}></div>
+                                ))}
+                              </div>
+                              
+                              <div className="relative p-8 md:p-12 mb-8 border-b border-zinc-800 print:border-zinc-300">
+                                <div className="flex justify-between items-start mb-12">
+                                  <div>
+                                    <h1 className="text-5xl md:text-6xl font-serif italic font-bold tracking-tight text-white uppercase leading-none">INVOICE</h1>
+                                    <p className="text-[var(--brandColor)] font-mono tracking-widest uppercase text-xs mt-2 font-bold px-1">Production Billing</p>
+                                  </div>
+                                  <div className="text-right">
+                                    {previewData.logoUrl ? (
+                                      <div className="mb-4">
+                                        <img src={previewData.logoUrl} alt="Logo" className="h-12 object-contain ml-auto print:h-8" />
+                                      </div>
+--
+                 <PlusCircle size={14} /> New Template
+              </button>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {emailTemplates.map(template => (
+                 <div key={template.id} className="bg-[#050505] border border-zinc-800 rounded-xl p-5 hover:border-[var(--color-red)]/50 transition-colors group flex flex-col justify-between">
+                    <div>
+                       <div className="flex justify-between items-start mb-3">
+                          <h4 className="text-white font-bold tracking-tight">{template.name}</h4>
+                          <div className="flex gap-2">
+                             <button onClick={() => {
+                                setEditEmailTemplate(template);
+                                setEmailTemplateModalOpen(true);
+                             }} className="text-zinc-500 hover:text-white transition-colors"><PenTool size={14} /></button>
+                             <button onClick={async () => {
+                                if(confirm("Delete this template?")) {
+                                   try {
+                                     await deleteDoc(doc(db, "emailTemplates", template.id));
+                                     toast.success("Template deleted");
+                                   } catch(e) {
+--
+                 <PlusCircle size={14} /> New Custom Template
+              </button>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {customInvoiceTemplates.map(template => (
+                 <div key={template.id} className="bg-[#050505] border border-zinc-800 rounded-xl p-5 hover:border-[var(--color-red)]/50 transition-colors group flex flex-col justify-between">
+                    <div>
+                       <div className="flex justify-between items-start mb-3">
+                          <h4 className="text-white font-bold tracking-tight truncate">{template.name}</h4>
+                          <div className="flex gap-2">
+                             <button onClick={() => {
+                                setEditTemplateId(template.id);
+                                setEditTemplateName(template.name);
+                                setEditTemplateHtml(template.html);
+                                setTemplateModalOpen(true);
+                             }} className="text-zinc-500 hover:text-white transition-colors"><PenTool size={14} /></button>
+                             <button onClick={async () => {
+                                if(confirm("Delete this custom HTML invoice template?")) {
+                                   try {
+                                     await deleteDoc(doc(db, "customInvoiceTemplates", template.id));
+--
+                        }
+                     }}
+                     className="w-full bg-[#111] border border-zinc-800 rounded p-3 text-sm text-zinc-300 focus:outline-none focus:border-[var(--brandColor)] transition-colors appearance-none"
+                  >
+                     <option value="">Select a template to use...</option>
+                     {emailTemplates.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                     ))}
+                  </select>
+               </div>
+               
+               <div className="space-y-4">
+                  <div>
+                     <label className="text-[10px] uppercase font-mono tracking-widest text-zinc-500 mb-1 block">To:</label>
+                     <input value={livePreviewData?.email || ""} readOnly className="w-full bg-[#111] border border-zinc-800 rounded p-3 text-sm text-white focus:outline-none cursor-not-allowed opacity-50" />
+                     {!livePreviewData?.email && <p className="text-xs text-red-400 mt-1">Please enter an email in the invoice editor.</p>}
+                  </div>
+                  <div>
+                     <label className="text-[10px] uppercase font-mono tracking-widest text-zinc-500 mb-1 block">Subject</label>
+                     <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} className="w-full bg-[#111] border border-zinc-800 rounded p-3 text-sm text-white focus:outline-none focus:border-[var(--brandColor)] transition-colors" />
+                  </div>

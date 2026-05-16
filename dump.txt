@@ -1,0 +1,249 @@
+1775-                                        </div>
+1776-                                      </td>
+1777-                                      <td className="py-6 px-6 text-right font-black text-xl tabular-nums align-top text-white print:text-black">
+1778-                                        {getCurrencySymbol(
+1779-                                          previewData?.currency,
+1780-                                        )}
+1781-                                        <span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+1782-                                      </td>
+1783-                                    </tr>
+1784-                                    {/* Empty row for spacing/design */}
+1785-                                    <tr>
+1786-                                      <td className="py-8 px-6 bg-[#0a0a0a]/50 print:bg-gray-50/50"></td>
+1787-                                      <td className="py-8 px-6 bg-[#0a0a0a]/50 print:bg-gray-50/50"></td>
+1788-                                    </tr>
+1789-                                  </tbody>
+1790-                                </table>
+1791-                              </div>
+1792-
+1793-                              <div className="flex flex-col-reverse md:flex-row md:justify-between items-stretch md:items-start border-t-4 border-zinc-800 print:border-black pt-8 gap-8 mt-auto">
+1794-                                <div className="w-full md:max-w-md">
+1795:                                  {previewData.terms && (
+1796-                                    <div className="mb-6 bg-yellow-900/10 print:bg-yellow-100/50 p-4 rounded-lg border border-yellow-700/30 print:border-yellow-200">
+1797-                                      <p className="text-xs font-bold font-mono text-yellow-500 print:text-yellow-800 uppercase tracking-widest mb-2 flex items-center gap-2">
+1798-                                        <svg
+1799-                                          className="w-4 h-4"
+1800-                                          fill="none"
+1801-                                          stroke="currentColor"
+1802-                                          viewBox="0 0 24 24"
+1803-                                          xmlns="http://www.w3.org/2000/svg"
+1804-                                        >
+1805-                                          <path
+1806-                                            strokeLinecap="round"
+1807-                                            strokeLinejoin="round"
+1808-                                            strokeWidth={2}
+1809-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+1810-                                          />
+1811-                                        </svg>
+1812-                                        Contract Terms
+1813-                                      </p>
+1814-                                      <p onClick={() => document.getElementById('standalone-terms')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-sm font-mono text-zinc-300 print:text-gray-700 leading-relaxed whitespace-pre-wrap" title="Click to edit">
+1815:                                        {previewData.terms}
+1816-                                      </p>
+1817-                                    </div>
+1818-                                  )}
+1819-                                  {previewData.additionalNotes && (
+1820-                                    <div className="mb-6 bg-zinc-900/40 print:bg-gray-100/50 p-4 rounded-lg border border-zinc-800/50 print:border-gray-200">
+1821-                                      <p className="text-xs font-bold font-mono text-zinc-400 print:text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+1822-                                        <svg
+1823-                                          className="w-4 h-4"
+1824-                                          fill="none"
+1825-                                          stroke="currentColor"
+1826-                                          viewBox="0 0 24 24"
+1827-                                          xmlns="http://www.w3.org/2000/svg"
+1828-                                        >
+1829-                                          <path
+1830-                                            strokeLinecap="round"
+1831-                                            strokeLinejoin="round"
+1832-                                            strokeWidth={2}
+1833-                                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+1834-                                          />
+1835-                                        </svg>
+--
+2027-                                      )}
+2028-                                      {previewData.revisions && (
+2029-                                        <p>
+2030-                                          Revisions:{" "}
+2031-                                          {previewData.revisions}
+2032-                                        </p>
+2033-                                      )}
+2034-                                    </div>
+2035-                                  </div>
+2036-                                  <div className="col-span-1 text-right font-medium text-black text-base">
+2037-                                    {getCurrencySymbol(
+2038-                                      previewData?.currency,
+2039-                                    )}
+2040-                                    <span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2041-                                  </div>
+2042-                                </div>
+2043-                              </div>
+2044-
+2045-                              <div className="mt-auto pt-8 border-t border-zinc-200 flex justify-between items-start">
+2046-                                <div className="max-w-md">
+2047:                                  {previewData.terms && (
+2048-                                    <>
+2049-                                      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2 mt-4">
+2050-                                        Contract Terms
+2051-                                      </p>
+2052-                                      <p onClick={() => document.getElementById('standalone-terms')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-sm text-zinc-500 leading-relaxed whitespace-pre-wrap" title="Click to edit">
+2053:                                        {previewData.terms}
+2054-                                      </p>
+2055-                                    </>
+2056-                                  )}
+2057-                                  {previewData.additionalNotes && (
+2058-                                    <>
+2059-                                      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2 mt-4">
+2060-                                        Additional Notes
+2061-                                      </p>
+2062-                                      <p onClick={() => document.getElementById('standalone-additionalNotes')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-sm text-zinc-500 leading-relaxed whitespace-pre-wrap" title="Click to edit">
+2063-                                        {previewData.additionalNotes}
+2064-                                      </p>
+2065-                                    </>
+2066-                                  )}
+2067-                                </div>
+2068-                                <div className="text-right w-64 space-y-3">
+2069-                                  <div className="flex justify-between text-sm text-zinc-500">
+2070-                                    <span>Subtotal</span>
+2071-                                    <span>
+2072-                                      {getCurrencySymbol(
+2073-                                        previewData?.currency,
+--
+2386-                                            (1 +
+2387-                                              Number(
+2388-                                                previewData.taxRate ||
+2389-                                                  0,
+2390-                                              ) /
+2391-                                                100) -
+2392-                                            Number(
+2393-                                              previewData.amountPaid ||
+2394-                                                0,
+2395-                                            ),
+2396-                                        ).toLocaleString(undefined, {
+2397-                                          minimumFractionDigits: 2,
+2398-                                        })}
+2399-                                      </td>
+2400-                                    </tr>
+2401-                                  </tfoot>
+2402-                                </table>
+2403-
+2404-                                <div className="mt-auto grid grid-cols-2 gap-8 text-zinc-900">
+2405-                                  <div>
+2406:                                    {previewData.terms && (
+2407-                                      <>
+2408-                                        <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">
+2409-                                          Contract Terms
+2410-                                        </h4>
+2411-                                        <p onClick={() => document.getElementById('standalone-terms')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-sm text-zinc-600 leading-relaxed whitespace-pre-wrap" title="Click to edit">
+2412:                                        {previewData.terms}
+2413-                                      </p>
+2414-                                      </>
+2415-                                    )}
+2416-                                    {previewData.additionalNotes && (
+2417-                                      <>
+2418-                                        <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 mt-4">
+2419-                                          Additional Notes
+2420-                                        </h4>
+2421-                                        <p onClick={() => document.getElementById('standalone-additionalNotes')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-sm text-zinc-600 leading-relaxed whitespace-pre-wrap" title="Click to edit">
+2422-                                        {previewData.additionalNotes}
+2423-                                      </p>
+2424-                                      </>
+2425-                                    )}
+2426-                                  </div>
+2427-                                  <div className="print:hidden">
+2428-                                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">
+2429-                                      Payment Methods
+2430-                                    </h4>
+2431-                                    {previewData.paymentLinks &&
+2432-                                    Object.values(
+--
+2556-                                     <tr className="border-b border-slate-100 print:border-none">
+2557-                                       <td className="py-6">
+2558-                                          <p onClick={() => document.getElementById('standalone-desc')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity font-medium text-slate-900 text-lg" title="Click to edit">
+2559-                                          {previewData.desc}
+2560-                                        </p>
+2561-                                          <div className="mt-2 text-sm text-slate-500 grid gap-1">
+2562-                                             {previewData.format && <span>Format: {previewData.format}</span>}
+2563-                                             {previewData.revisions && <span>Revisions: {previewData.revisions}</span>}
+2564-                                          </div>
+2565-                                       </td>
+2566-                                       <td className="py-6 text-right font-medium text-slate-900 text-lg">
+2567-                                           $<span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2568-                                       </td>
+2569-                                     </tr>
+2570-                                   </tbody>
+2571-                                 </table>
+2572-                              </div>
+2573-
+2574-                              <div className="mt-auto p-8 md:p-12 border-t border-slate-200 flex justify-between items-start bg-slate-50 print:bg-white print:border-t-2">
+2575-                                <div className="max-w-xs">
+2576:                                  {previewData.terms && (
+2577-                                     <>
+2578-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Contract Terms</p>
+2579-                                        <p onClick={() => document.getElementById('standalone-terms')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-xs text-slate-500 leading-relaxed" title="Click to edit">
+2580:                                        {previewData.terms}
+2581-                                      </p>
+2582-                                     </>
+2583-                                  )}
+2584-                                </div>
+2585-                                <div className="w-64 space-y-3">
+2586-                                   <div className="flex justify-between text-sm text-slate-500">
+2587-                                      <span>Subtotal</span>
+2588-                                      <span>$<span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></span>
+2589-                                   </div>
+2590-                                   {Number(previewData.amountPaid) > 0 && (
+2591-                                     <div className="flex justify-between text-sm text-emerald-600">
+2592-                                        <span>Amount Paid</span>
+2593-                                        <span>-$<span onClick={() => document.getElementById('standalone-amountPaid')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amountPaid || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></span>
+2594-                                     </div>
+2595-                                   )}
+2596-                                   <div className="flex justify-between items-center text-xl font-bold tracking-tight text-slate-900 pt-4 border-t border-slate-200">
+2597-                                      <span>Total Due</span>
+2598-                                      <span>${Math.max(0, Number(previewData.amount) - Number(previewData.amountPaid || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2599-                                   </div>
+2600-                                   
+--
+2672-                                               <td className="py-6">
+2673-                                                  <p onClick={() => document.getElementById('standalone-desc')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity font-medium text-stone-800 text-lg" title="Click to edit">
+2674-                                          {previewData.desc}
+2675-                                        </p>
+2676-                                                  <div className="mt-3 flex gap-4 text-xs font-mono text-stone-500">
+2677-                                                     {previewData.format && <span className="bg-stone-100 px-2 py-1 rounded">CODEC: {previewData.format}</span>}
+2678-                                                     {previewData.revisions && <span onClick={() => document.getElementById('standalone-revisions')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity bg-stone-100 px-2 py-1 rounded" title="Click to edit">REVISIONS: {previewData.revisions}</span>}
+2679-                                                  </div>
+2680-                                               </td>
+2681-                                               <td className="py-6 text-right font-medium text-stone-900 text-xl font-serif">
+2682-                                                   $<span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2683-                                               </td>
+2684-                                             </tr>
+2685-                                           </tbody>
+2686-                                         </table>
+2687-                                     </div>
+2688-                                  </div>
+2689-
+2690-                                  <div className="pt-8 border-t-2 border-stone-200 flex justify-between items-start">
+2691-                                     <div className="max-w-xs">
+2692:                                        {previewData.terms && (
+2693-                                           <>
+2694-                                              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2 font-mono">Contract Terms</p>
+2695-                                              <p onClick={() => document.getElementById('standalone-terms')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity text-xs text-stone-500 leading-relaxed" title="Click to edit">
+2696:                                        {previewData.terms}
+2697-                                      </p>
+2698-                                           </>
+2699-                                        )}
+2700-                                     </div>
+2701-                                     <div className="w-64 space-y-3">
+2702-                                        <div className="flex justify-between items-center text-sm text-stone-500 font-mono">
+2703-                                           <span>Subtotal</span>
+2704-                                           <span>$<span onClick={() => document.getElementById('standalone-amount')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></span>
+2705-                                        </div>
+2706-                                        {Number(previewData.amountPaid) > 0 && (
+2707-                                           <div className="flex justify-between items-center text-sm text-emerald-600 font-mono">
+2708-                                              <span>Paid</span>
+2709-                                              <span>-$<span onClick={() => document.getElementById('standalone-amountPaid')?.focus()} className="cursor-pointer hover:opacity-70 transition-opacity" title="Click to edit">{Number(previewData.amountPaid || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span></span>
+2710-                                           </div>
+2711-                                        )}
+2712-                                        <div className="flex justify-between items-center text-2xl font-serif italic text-stone-900 pt-4 border-t border-stone-200">
+2713-                                           <span>Total Due</span>
+2714-                                           <span>${Math.max(0, Number(previewData.amount) - Number(previewData.amountPaid || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+2715-                                        </div>
+2716-                                        

@@ -1,0 +1,125 @@
+23-  contactName: string;
+24-  contactEmail: string;
+25:  niche?: string;
+26-  budget: number;
+27-  message: string;
+28-  packages?: string[];
+--
+80-    contactName: '',
+81-    contactEmail: '',
+82:    niche: '',
+83-    timeline: '',
+84-    budget: '',
+85-    companyUrl: ''
+--
+100-        contactName: form.contactName,
+101-        contactEmail: form.contactEmail,
+102:        niche: form.niche,
+103-        timeline: form.timeline,
+104-        budget: Number(form.budget),
+105-        companyUrl: form.companyUrl,
+--
+136-              <div>
+137-                <label className="text-[9px] text-white/60 uppercase font-mono tracking-[0.2em] mb-2 block">Sector / Vector</label>
+138:                <select value={form.niche} onChange={e => setForm({...form, niche: e.target.value})} className="w-full bg-[#000000]/50 border border-white/[0.04] p-3 rounded-2xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] text-xs ring-0 focus:ring-1 focus:ring-white/20 text-white/80 focus:outline-none focus:border-white/[0.04] focus:bg-[#000000] transition-all appearance-none font-mono">
+139-                  <option value="">[SELECT VECTOR]</option>
+140-                  <option value="Gaming">Gaming</option>
+141-                  <option value="Finance / Crypto">Finance & Crypto</option>
+--
+245-    contactName: initialLead.contactName || '',
+246-    contactEmail: initialLead.contactEmail || '',
+247:    niche: initialLead.niche || '',
+248-    budget: initialLead.budget || 0,
+249-    message: initialLead.message || '',
+250-    companyUrl: initialLead.companyUrl || '',
+--
+422-        contactName: editForm.contactName,
+423-        contactEmail: editForm.contactEmail,
+424:        niche: editForm.niche,
+425-        budget: Number(editForm.budget),
+426-        companyUrl: editForm.companyUrl,
+427-        timeline: editForm.timeline,
+--
+531-      const notesContext = notes.map((n:any) => `[${new Date(n.createdAt?.toDate ? n.createdAt.toDate() : n.createdAt || Date.now()).toLocaleDateString()}] ${n.type || 'note'}: ${n.text}`).join('\n');
+532-      const prompt = `You are a world-class sales engineer. Draft a high-converting web proposal for this lead.
+533:Lead Info: Name: ${lead.brandName || lead.contactName || 'Client'} Niche: ${lead.niche || 'Unknown'} Budget: ${lead.budget || 'Unknown'}
+534-Notes: ${notesContext}`;
+535-
+536-      const response = await client.models.generateContent({ 
+--
+796-      if (!client) throw new Error("AI Client not initialized");
+797-      
+798:      const prompt = `You are a creative sales strategist. The client is ${lead.brandName}. Niche is ${lead.niche}. 
+799-      Generate a 3-video concept pitch tailored exactly to their audience. Focus on high-converting ideas that prove long-term value.
+800-      This is an up-sell pitch to transition them into a monthly retainer.
+801-      Return the output directly in markdown format.`;
+--
+1450-                <span className="text-xs font-mono font-bold text-white uppercase tracking-[0.2em] text-[9px] flex items-center gap-1.5">
+1451-                   <span className="text-white/60">IQ</span>
+1452:                   <span className="text-zinc-100 text-sm">{lead.qualityScore || Math.min(99, Math.max(10, 40 + (Number(lead.budget) > 1000 ? 35 : (Number(lead.budget) > 0 ? 15 : 0)) + (lead.timeline ? 15 : 0) + (lead.niche ? 9 : 0)))}</span>
+1453-                </span>
+1454-              </div>
+1455-            </div>
+--
+1483-                  <input type="text" value={editForm.contactName} onChange={e => setEditForm({...editForm, contactName: e.target.value})} className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3 text-sm text-white focus:outline-none focus:border-white/[0.04] transition-colors" placeholder="Contact Name" />
+1484-                  <input type="email" value={editForm.contactEmail} onChange={e => setEditForm({...editForm, contactEmail: e.target.value})} className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3 text-sm text-white focus:outline-none focus:border-white/[0.04] transition-colors" placeholder="Contact Email" />
+1485:                  <select value={editForm.niche} onChange={e => setEditForm({...editForm, niche: e.target.value})} className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3 text-sm text-white/80 focus:outline-none focus:border-white/[0.04] transition-colors appearance-none">
+1486:                    <option value="">Select Niche...</option>
+1487-                    <option value="Gaming">Gaming</option>
+1488-                    <option value="Finance / Crypto">Finance & Crypto</option>
+1489-                    <option value="Lifestyle / Vlog">Lifestyle & Vlog</option>
+--
+1517-                      contactName: lead.contactName || '',
+1518-                      contactEmail: lead.contactEmail || '',
+1519:                      niche: lead.niche || '',
+1520-                      budget: lead.budget || 0,
+1521-                      message: lead.message || '',
+1522-                      companyUrl: lead.companyUrl || '',
+--
+1559-                    
+1560-                    <div className="flex flex-col gap-1">
+1561:                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Niche / Category</span>
+1562:                      <div className="text-sm text-white/90 py-1">{lead.niche || <span className="text-zinc-600 opacity-50 italic">None Set</span>}</div>
+1563-                    </div>
+1564-                    
+1565-                    <div className="flex flex-col gap-1">
+--
+2702-           l.contactName?.toLowerCase().includes(q) || 
+2703-           l.contactEmail?.toLowerCase().includes(q) ||
+2704:           l.niche?.toLowerCase().includes(q);
+2705-  });
+2706-
+2707-  const handleExportCSV = () => {
+--
+2710-       return;
+2711-    }
+2712:    const headers = ["Brand", "Contact", "Email", "Niche", "Status", "Budget", "Created At"];
+2713-    const rows = filteredLeads.map((l: any) => [
+2714-       `"${(l.brandName || '').replace(/"/g, '""')}"`,
+2715-       `"${(l.contactName || '').replace(/"/g, '""')}"`,
+2716-       `"${(l.contactEmail || '').replace(/"/g, '""')}"`,
+2717:       `"${(l.niche || '').replace(/"/g, '""')}"`,
+2718-       `"${(l.status || '').replace(/"/g, '""')}"`,
+2719-       l.budget || 0,
+2720-       `"${l.createdAt?.toDate ? l.createdAt.toDate().toISOString() : ''}"`
+--
+3023-                                    <div className="flex items-center gap-2">
+3024-                                       <span className="text-[8px] bg-white/[0.02] border border-white/[0.02] px-1.5 py-0.5 rounded text-white/60 uppercase font-mono tracking-[0.2em] shrink-0">{lead.id.slice(0,4)}</span>
+3025:                                       {lead.niche && (
+3026:                                          <span className="text-[9px] text-white/60 uppercase font-mono tracking-[0.2em] truncate">{lead.niche}</span>
+3027-                                       )}
+3028-                                       <span className="ml-auto text-[8px] bg-white/5 text-zinc-100/80 border border-white/[0.04] px-1.5 py-0.5 rounded font-mono tracking-[0.2em] shrink-0 flex items-center gap-1 group-hover/card:bg-white/20 transition-colors">
+3029:                                          <BrainCircuit size={8} /> {lead.qualityScore || Math.min(99, Math.max(10, 40 + (Number(lead.budget) > 1000 ? 35 : (Number(lead.budget) > 0 ? 15 : 0)) + (lead.timeline ? 15 : 0) + (lead.niche ? 9 : 0)))}
+3030-                                       </span>
+3031-                                    </div>
+3032-                                  </div>
+--
+3484-                            <Pie 
+3485-                              data={[
+3486:                                { name: 'Gaming', value: filteredLeads.filter(l=>l.niche?.includes('Gaming')).reduce((acc,l)=>acc+(l.budget||0),0) || 500 },
+3487:                                { name: 'Finance', value: filteredLeads.filter(l=>l.niche?.includes('Finance')).reduce((acc,l)=>acc+(l.budget||0),0) || 200 },
+3488:                                { name: 'Entertainment', value: filteredLeads.filter(l=>l.niche?.includes('Entertainment')).reduce((acc,l)=>acc+(l.budget||0),0) || 100 },
+3489:                                { name: 'Other', value: filteredLeads.filter(l=>(!l.niche || l.niche==='Other')).reduce((acc,l)=>acc+(l.budget||0),0) || 50 }
+3490-                              ]} 
+3491-                              cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="value" stroke="none"
+3492-                            >
