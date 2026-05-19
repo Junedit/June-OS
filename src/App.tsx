@@ -44,6 +44,7 @@ if (!(toast as any).__patched) {
 
 import PublicContractView from './screens/PublicContractView';
 import PublicInvoiceView from './screens/PublicInvoiceView';
+import PublicProposalView from './screens/PublicProposalView';
 import PublicIntakeView from './screens/PublicIntakeView';
 import SalesRoomView from './screens/SalesRoomView';
 import ClientOnboardingPortal from './screens/ClientOnboardingPortal';
@@ -80,6 +81,9 @@ export default function App() {
   }
   if (searchParams.get('mode') === 'contract') {
     return <PublicContractView contractId={searchParams.get('id')} />;
+  }
+  if (searchParams.get('mode') === 'proposal') {
+    return <PublicProposalView proposalId={searchParams.get('id')} />;
   }
   if (searchParams.get('mode') === 'invoice') {
     return <PublicInvoiceView invoiceId={searchParams.get('id')} />;

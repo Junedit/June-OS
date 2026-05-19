@@ -9,11 +9,13 @@ import { Save, Plus, Trash2, Settings as SettingsIcon, Palette, Image as ImageIc
 import { toast } from 'sonner';
 
 export default function Settings() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, userData, updateUserData } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cleaningDups, setCleaningDups] = useState(false);
   
+  const [avatarEmoji, setAvatarEmoji] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [themeColor, setThemeColor] = useState('red');
@@ -49,6 +51,12 @@ export default function Settings() {
 
   useEffect(() => {
     if (!user) return;
+    if (userData?.avatarEmoji) {
+      setAvatarEmoji(userData.avatarEmoji);
+    }
+    if (userData?.avatarUrl) {
+      setAvatarUrl(userData.avatarUrl);
+    }
     
     const loadSettings = async () => {
       try {
@@ -98,13 +106,14 @@ export default function Settings() {
     };
     
     loadSettings();
-  }, [user, userRole]);
+  }, [user, userRole, userData]);
 
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
     
     try {
+      await updateUserData({ avatarEmoji, avatarUrl });
       await setDoc(doc(db, 'settings', user.uid), {
         ownerId: user.uid,
         displayName,
@@ -532,6 +541,84 @@ export default function Settings() {
            <h3 className="text-[10px] font-mono text-white/50 mb-6 uppercase tracking-[0.2em]">Aesthetics & Ambience</h3>
            
            <div className="space-y-8">
+             <div>
+               <label className="flex items-center gap-2 text-[10px] text-white/50 uppercase tracking-[0.2em] mb-4 font-mono">
+                 <Users size={12} /> Profile Avatar Designation
+                 </label>
+                 <div className="flex flex-wrap gap-4">
+                 {[
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/John/John,white,1_Happy.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Salman/Salman,white,15_Grinning.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Mattew/Mattew,white,20_Like.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Chris/Chris,black,28_Thinking.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Justin/Justin,white,16_Winking.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Female/Angela/Angela,white,1_Happy.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Female/Kate/Kate,white,17_Happy_Winking.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Female/Jeniffer/Jeniffer,black,15_Grinning.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Female/Kim/Kim,white,20_Like.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Ed/Ed,white,15_Grinning.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Female/Ariana/Ariana,black,1_Happy.png',
+                    'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Krishna/Krishna,black,17_Happy_Winking.png'
+                  ].map(url => (
+                    <button
+                      key={url}
+                      onClick={() => { setAvatarUrl(url); setAvatarEmoji(''); }}
+                      className={`w-16 h-16 rounded-full border transition-all overflow-hidden flex items-center justify-center ${
+                        avatarUrl === url ? 'border-[var(--brand-primary)] ring-2 ring-[var(--brand-primary)]/50 scale-110 shadow-[0_0_20px_rgba(255,255,255,0.1)] bg-white/10' : 'border-white/[0.04] bg-white/5 opacity-60 hover:opacity-100 hover:scale-105'
+                      }`}
+                    >
+                      <img src={url} alt="3D Avatar" className="w-[100%] h-[100%] object-cover drop-shadow-xl" />
+                    </button>
+                  ))}
+                  {userRole === 'owner' && (
+                    <div className="relative flex items-center justify-center group ml-2 pl-4 border-l border-white/10 animate-in fade-in zoom-in duration-500">
+                      <style>{`
+                        @keyframes spin-slow {
+                          to { transform: rotate(360deg); }
+                        }
+                        @keyframes float-avatar {
+                          0%, 100% { transform: translateY(0); }
+                          50% { transform: translateY(-4px); }
+                        }
+                        @keyframes glow-pulse {
+                          0%, 100% { opacity: 0.3; transform: scale(1); }
+                          50% { opacity: 0.7; transform: scale(1.15); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
+                        }
+                      `}</style>
+                      <div className="absolute -inset-2 bg-gradient-to-tr from-amber-400/80 via-yellow-400 to-orange-500/80 rounded-full blur-xl opacity-30 group-hover:opacity-100 transition-all duration-700" style={{ animation: 'spin-slow 8s linear infinite, glow-pulse 4s ease-in-out infinite' }}></div>
+                      <button
+                        onClick={() => { setAvatarUrl('https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Chris/Chris,black,8_Star_Eye.png'); setAvatarEmoji(''); }}
+                        className={`relative w-20 h-20 rounded-full border-2 transition-all overflow-hidden flex flex-col items-center justify-start pt-1 transform-gpu ${
+                          avatarUrl === 'https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Chris/Chris,black,8_Star_Eye.png' 
+                            ? 'border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.8)] bg-gradient-to-br from-amber-500/20 to-purple-900/40 scale-110 z-10' 
+                            : 'border-amber-500/40 bg-[#0a0a0a] hover:border-amber-300 hover:scale-110 hover:shadow-[0_0_30px_rgba(251,191,36,0.4)]'
+                        }`}
+                      >
+                        <img src="https://raw.githubusercontent.com/Aghajari/AXMemojiView/master/app/src/main/assets/Memoji/Male/Chris/Chris,black,8_Star_Eye.png" alt="Boss Avatar" className="w-[85%] h-[85%] object-cover drop-shadow-2xl -mt-1 group-hover:scale-110 transition-transform duration-500" style={{ animation: 'float-avatar 3s ease-in-out infinite' }} />
+                        <div className="absolute bottom-1 w-full flex justify-center z-20">
+                          <span className="bg-gradient-to-tr from-yellow-100 via-amber-400 to-yellow-600 text-black text-[8px] font-black uppercase tracking-[0.25em] px-2.5 py-0.5 rounded shadow-[0_4px_15px_rgba(0,0,0,0.9)] border border-amber-100/60" style={{ animation: 'float-avatar 3s ease-in-out infinite', animationDelay: '0.2s' }}>BOSS</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                 </div>
+                 
+                 <div className="mt-8 flex flex-col gap-2 relative">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[var(--brand-primary)] to-purple-500 rounded-lg blur opacity-20"></div>
+                    <label className="text-[9px] uppercase tracking-widest font-bold text-white/60 relative z-10 flex items-center gap-2">
+                       <span>Or enter Custom URL / Custom 3D Asset Link</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={avatarUrl}
+                      onChange={(e) => { setAvatarUrl(e.target.value); setAvatarEmoji(''); }}
+                      placeholder="https://..."
+                      className="relative z-10 bg-[#0a0a0a] border border-white/[0.1] shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] rounded p-3 text-sm text-white focus:outline-none focus:border-[var(--brand-primary)]/50 font-mono transition-colors max-w-sm w-full"
+                    />
+                 </div>
+                 <p className="text-[10px] text-white/40 mt-4 font-mono tracking-widest uppercase mb-8 leading-relaxed">Select a high-quality 3D Apple Memoji avatar for your system profile.</p>
+             </div>
+
              <div>
                <label className="flex items-center gap-2 text-[10px] text-white/50 uppercase tracking-[0.2em] mb-4 font-mono">
                  <Palette size={12} /> Tint Designation

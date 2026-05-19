@@ -59,7 +59,7 @@ export default function ClientVideoReviewHub({ leadId }: { leadId?: string | nul
 
   useEffect(() => {
      if (leadId) {
-        getDoc(doc(db, 'leads', leadId)).then(d => {
+        const unsubLead = onSnapshot(doc(db, 'leads', leadId), d => {
            if (d.exists()) setLead({ id: d.id, ...d.data() });
         });
         
@@ -67,7 +67,7 @@ export default function ClientVideoReviewHub({ leadId }: { leadId?: string | nul
         const unsub = onSnapshot(q, snap => {
            setComments(snap.docs.map(d => ({id: d.id, ...d.data()} as Comment)));
         });
-        return () => unsub();
+        return () => { unsubLead(); unsub(); };
      }
   }, [leadId]);
 
@@ -191,16 +191,46 @@ export default function ClientVideoReviewHub({ leadId }: { leadId?: string | nul
       setReplyingTo(null);
   }
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
       setApprovalStatus('approved');
       setShowNotification({ type: 'approved', visible: true });
       setTimeout(() => setShowNotification(prev => ({ ...prev, visible: false })), 4000);
+      
+      if (leadId && lead?.ownerId) {
+          try {
+              // Update delivery stage
+              await updateDoc(doc(db, 'leads', leadId), {
+                  deliveryStage: 'done'
+              });
+              // Send notification to radar / dashboard
+              await addDoc(collection(db, 'activity_logs'), {
+                  ownerId: lead.ownerId,
+                  type: 'system',
+                  text: `Client explicitly Approved ${version} of the video!`,
+                  createdAt: serverTimestamp()
+              });
+          } catch(e) {}
+      }
   };
 
-  const handleRequestChanges = () => {
+  const handleRequestChanges = async () => {
       setApprovalStatus('changes_requested');
       setShowNotification({ type: 'changes', visible: true });
       setTimeout(() => setShowNotification(prev => ({ ...prev, visible: false })), 4000);
+      
+      if (leadId && lead?.ownerId) {
+          try {
+              await updateDoc(doc(db, 'leads', leadId), {
+                  deliveryStage: 'feedback'
+              });
+              await addDoc(collection(db, 'activity_logs'), {
+                  ownerId: lead.ownerId,
+                  type: 'system',
+                  text: `Client requested changes on ${version} of the video.`,
+                  createdAt: serverTimestamp()
+              });
+          } catch(e) {}
+      }
   };
 
   const formatTime = (seconds: number) => {
@@ -459,8 +489,8 @@ ${textDump}`;
                             <button onClick={handleRequestChanges} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-transparent text-white/70 hover:text-white hover:bg-white/[0.05] transition-colors text-[11px] font-mono tracking-widest uppercase">
                                 Request Changes
                             </button>
-                            <button onClick={handleApprove} className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 transition-all duration-300 text-[11px] font-mono font-bold tracking-widest uppercase shadow-[0_4px_20px_rgba(255,255,255,0.15)] hover:shadow-[0_4px_25px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 active:translate-y-0">
-                                <Check size={14} strokeWidth={3} /> Approve
+                            <button onClick={handleApprove} className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#34C759] text-white hover:bg-[#32D74B] transition-all duration-300 text-[11px] font-mono font-bold tracking-widest uppercase shadow-[0_4px_20px_rgba(52,199,89,0.3)] hover:shadow-[0_4px_25px_rgba(52,199,89,0.5)] hover:-translate-y-0.5 active:translate-y-0 border border-[#34C759]/50">
+                                <Check size={14} strokeWidth={3} /> Approve {version}
                             </button>
                         </>
                     )}
@@ -471,12 +501,10 @@ ${textDump}`;
             <div className="flex-1 p-6 md:p-12 flex flex-col items-center justify-center relative overflow-hidden bg-transparent">
                 <div className={`w-full max-w-5xl aspect-video bg-black/40 backdrop-blur-3xl rounded-[32px] overflow-hidden border ${version === 'V1' ? 'border-white/[0.2] shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.1)]' : 'border-white/[0.08] shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)]'} relative group isolate transition-all duration-500`}>
                     <div className="w-full h-full pointer-events-auto">
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                      {/* @ts-expect-error third party missing types */}
                       <Player 
                           ref={playerRef}
                           className="w-full h-full object-contain bg-black"
-                          url={lead?.reviewVideoUrl || "https://player.vimeo.com/video/1192000101"}
+                          url={(lead?.uploadedAssets && lead.uploadedAssets.length > 0) ? lead.uploadedAssets[lead.uploadedAssets.length - 1].url : (lead?.reviewVideoUrl || "https://player.vimeo.com/video/1192000101")}
                           width="100%"
                           height="100%"
                           playing={isPlaying}

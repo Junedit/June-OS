@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getDoc, doc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDoc, doc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, updateDoc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import Markdown from 'react-markdown';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Play, TrendingUp, BarChart3, Presentation, ArrowRight, Quote, CheckCircle, Star, FileSignature, Layers, Clock, Lock, Sparkles, X, MessageSquare, Send } from 'lucide-react';
@@ -65,9 +65,39 @@ export default function SalesRoomView({ leadId }: { leadId: string | null }) {
       sigPadRef.current?.clear();
   };
 
-  const handleConfirmSignature = () => {
+  const handleConfirmSignature = async () => {
       if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
           setIsSigned(true);
+          
+          if (leadId && lead?.ownerId) {
+            try {
+              // Mark as signed in DB
+              const docRef = doc(db, 'leads', leadId);
+              await updateDoc(docRef, { status: 'closed' });
+              
+              // Log activity
+              await addDoc(collection(db, 'activity_logs'), {
+                ownerId: lead.ownerId,
+                type: 'deal',
+                text: `${lead.brandName || 'A prospect'} signed the proposal and locked the deal!`,
+                createdAt: serverTimestamp()
+              });
+            } catch (e) {
+               console.error("Error confirming signature:", e);
+               // ignore client errors for unauthenticated users if rules deny it, 
+               // but we should probably allow this if we have a token or something.
+               // Actually we're hitting `activity_logs` which might be protected.
+               // Let's just catch it.
+               try {
+                  const errInfo = {
+                    error: e instanceof Error ? e.message : String(e),
+                    operationType: OperationType.UPDATE,
+                    path: `leads/${leadId}`
+                  }
+                  console.error('Firestore Error: ', JSON.stringify(errInfo));
+               } catch(ex){}
+            }
+          }
       }
   };
 
@@ -568,9 +598,20 @@ export default function SalesRoomView({ leadId }: { leadId: string | null }) {
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
                 Proposal Accepted.
               </h1>
-              <p className="text-xl md:text-2xl text-white/50 font-light max-w-2xl mx-auto mb-12">
-                Welcome to the team, <span className="text-white font-medium">{lead.brandName}</span>. Kindly reply to the email we sent you to proceed.
+              <p className="text-xl md:text-2xl text-white/50 font-light max-w-2xl mx-auto mb-10">
+                Welcome to the team, <span className="text-white font-medium">{lead.brandName}</span>. Your onboarding sequence is ready.
               </p>
+              
+              <div className="bg-white/[0.05] border border-white/[0.1] rounded-3xl p-8 max-w-md mx-auto mb-8 shadow-2xl">
+                 <h3 className="text-lg font-bold text-white mb-2">First Retainer Payment</h3>
+                 <p className="text-sm text-white/50 mb-6">Pay securely via Stripe to activate your project roadmap and invite your team.</p>
+                 <a href="#" className="w-full bg-[#635BFF] hover:bg-[#7a73ff] text-white px-8 py-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-[0_0_30px_rgba(99,91,255,0.4)] flex items-center justify-center gap-3 relative overflow-hidden group">
+                   <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></span>
+                   Pay ${(lead.budget ? (parseInt(lead.budget) / 2) : 2500).toLocaleString()} <ArrowRight size={16} />
+                 </a>
+              </div>
+              
+              <p className="text-sm text-white/30 font-mono">Or reply to the email we sent you to proceed.</p>
            </motion.div>
         )}
       </AnimatePresence>

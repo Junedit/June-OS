@@ -45,6 +45,7 @@ interface Lead {
   source?: string;
   qualityScore?: number;
   estimatedUpsideValue?: string;
+  estimatedRevenue?: string;
   hiringIntent?: string;
   hiringMentions?: string;
   distressSignal?: boolean;
@@ -267,6 +268,10 @@ const LeadDetailsModal = ({ lead: initialLead, onClose, defaultTab = 'contact' }
   const [aiGhostReact, setAiGhostReact] = useState(false);
   const [aiDripSequence, setAiDripSequence] = useState(false);
   const [aiOutreachPitch, setAiOutreachPitch] = useState(false);
+  const [aiKillShot, setAiKillShot] = useState(false);
+  const [aiLoomScript, setAiLoomScript] = useState(false);
+  const [generatingProposal, setGeneratingProposal] = useState(false);
+  const [aiChannelInsights, setAiChannelInsights] = useState(false);
   const [aiUpsellPitch, setAiUpsellPitch] = useState(false);
   const [sendingEmailProposal, setSendingEmailProposal] = useState(false);
   const [sendingEmailInvoice, setSendingEmailInvoice] = useState(false);
@@ -989,6 +994,99 @@ Notes: ${notesContext}`;
       console.error(e);
     } finally {
       setAiDripSequence(false);
+    }
+  };
+
+  const handleGenerateChannelInsights = async () => {
+    setAiChannelInsights(true);
+    try {
+      const { generateChannelInsights } = await import('../services/ai');
+      const insights = await generateChannelInsights(lead);
+      await handleAddNote(`🧠 Deep Channel Insights:\n\n${insights}`);
+      toast.success("AI-powered channel insights generated and added to notes!");
+    } catch (e: any) {
+      toast.error("Failed to generate AI-powered channel insights.");
+      console.error(e);
+    } finally {
+      setAiChannelInsights(false);
+    }
+  };
+
+  const handleGenerateKillShot = async () => {
+    setAiKillShot(true);
+    try {
+      const { generateKillShotIntel } = await import('../services/ai');
+      const intel = await generateKillShotIntel(lead);
+      await handleAddNote(`🕵️ "Kill Shot" Competitor Intel:\n\n${intel}`);
+      toast.success("Kill Shot Competitor Intel generated and saved to notes!");
+    } catch (e: any) {
+      toast.error("Failed to generate Kill Shot intel.");
+      console.error(e);
+    } finally {
+      setAiKillShot(false);
+    }
+  };
+
+  const handleGenerateLoomScript = async () => {
+    setAiLoomScript(true);
+    try {
+      const { generateLoomScript } = await import('../services/ai');
+      const script = await generateLoomScript(lead);
+      await handleAddNote(`🎬 AI Loom Script (Hook & Action):\n\n${script}`);
+      toast.success("Loom Script generated and saved to notes!");
+    } catch (e: any) {
+      toast.error("Failed to generate Loom script.");
+      console.error(e);
+    } finally {
+      setAiLoomScript(false);
+    }
+  };
+
+  const handleGenerateProposalAndContract = async () => {
+    setGeneratingProposal(true);
+    try {
+      const { addDoc, collection, serverTimestamp, updateDoc, doc } = await import('firebase/firestore');
+      
+      const proposalRef = await addDoc(collection(db, 'proposals'), {
+        title: `Video Production Proposal - ${lead.brandName}`,
+        clientName: lead.brandName,
+        status: 'draft',
+        amount: lead.budget || 3000,
+        content: `# Video Production Proposal for ${lead.brandName}\n\n## Overview\nBased on our deep audit of your channel, we can increase your views and engagement significantly.\n\n## Estimated ROI\n${lead.estimatedRevenue ? lead.estimatedRevenue : 'Potential to double AdSense revenue over 6-12 months.'}\n\n## Scope of Work\n- Full custom editing pipeline\n- Thumbnail A/B Strategy\n- SEO Optimization\n- Hook performance retention edits\n\n## Investment\nStarting at $${lead.budget || 3000}/mo.\n\n## Next Steps\nLet's get started.`,
+        ownerId: user?.uid,
+        leadId: lead.id,
+        createdAt: serverTimestamp(),
+      });
+
+      const contractRef = await addDoc(collection(db, 'contracts'), {
+        title: `Service Agreement - ${lead.brandName}`,
+        clientName: lead.brandName,
+        status: 'draft',
+        amount: lead.budget || 3000,
+        content: `# Service Agreement\n\nThis agreement is between the agency and ${lead.brandName}.\n\n**Terms:**\n- We will deliver 4 highly edited videos per month.\n- Monthly retainer: $${lead.budget || 3000}\n- Payment due net 30.\n\nPlease sign below.`,
+        ownerId: user?.uid,
+        leadId: lead.id,
+        createdAt: serverTimestamp(),
+      });
+
+      // Update lead
+      await updateDoc(doc(db, 'leads', lead.id), {
+        status: 'Negotiation',
+        proposalId: proposalRef.id,
+        contractId: contractRef.id,
+        updatedAt: serverTimestamp()
+      });
+
+      const publicProposalUrl = `${window.location.origin}/?mode=proposal&id=${proposalRef.id}`;
+      const publicContractUrl = `${window.location.origin}/?mode=contract&id=${contractRef.id}`;
+
+      await handleAddNote(`📄 Proposal & Contract Generated:\n\nProposal Link: ${publicProposalUrl}\nContract Link: ${publicContractUrl}`);
+      toast.success("Proposal & Contract generated and added to notes! Lead moved to Negotiation.");
+    } catch (e: any) {
+      toast.error("Failed to generate Proposal and Contract.");
+      console.error(e);
+    } finally {
+      setGeneratingProposal(false);
     }
   };
 
@@ -1924,8 +2022,20 @@ ${invoiceText}
                        <button onClick={handleGenerateOutreachPitch} disabled={aiOutreachPitch} className="text-white bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/40 hover:to-purple-600/40 border border-blue-500/30 text-xs px-4 py-2 rounded transition-colors disabled:opacity-50 !shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center gap-1.5">
                          <Zap size={12} className={aiOutreachPitch ? 'animate-pulse text-blue-400' : 'text-blue-400'} /> {aiOutreachPitch ? 'Scanning targets...' : 'Deep Sniper Audit & Strategy'}
                        </button>
-                       <button onClick={handleGenerateDripSequence} disabled={aiDripSequence} className="text-white bg-white/10 hover:bg-white/20 border border-white/[0.05] text-xs px-4 py-2 rounded transition-colors disabled:opacity-50">
+                       <button onClick={handleGenerateChannelInsights} disabled={aiChannelInsights} className="text-white bg-gradient-to-r from-indigo-600/20 to-fuchsia-600/20 hover:from-indigo-600/40 hover:to-fuchsia-600/40 border border-indigo-500/30 text-xs px-4 py-2 rounded transition-colors disabled:opacity-50 !shadow-[0_0_15px_rgba(79,70,229,0.15)] flex items-center gap-1.5">
+                         <BrainCircuit size={12} className={aiChannelInsights ? 'animate-pulse text-indigo-400' : 'text-indigo-400'} /> {aiChannelInsights ? 'Analyzing Channel...' : 'Deep Channel Insights 🧠'}
+                       </button>
+                       <button onClick={handleGenerateKillShot} disabled={aiKillShot} className="text-white bg-gradient-to-r from-red-600/20 to-orange-600/20 hover:from-red-600/40 hover:to-orange-600/40 border border-red-500/30 text-xs px-4 py-2 rounded transition-colors disabled:opacity-50 !shadow-[0_0_15px_rgba(220,38,38,0.15)] flex items-center gap-1.5">
+                         <Target size={12} className={aiKillShot ? 'animate-pulse text-red-500' : 'text-red-500'} /> {aiKillShot ? 'Finding Competitors...' : 'Kill Shot Intel'}
+                       </button>
+                       <button onClick={handleGenerateLoomScript} disabled={aiLoomScript} className="text-white bg-gradient-to-r from-purple-600/20 to-indigo-600/20 hover:from-purple-600/40 hover:to-indigo-600/40 border border-purple-500/30 text-xs px-4 py-2 rounded transition-colors disabled:opacity-50 !shadow-[0_0_15px_rgba(147,51,234,0.15)] flex items-center gap-1.5">
+                         <Video size={12} className={aiLoomScript ? 'animate-pulse text-purple-400' : 'text-purple-400'} /> {aiLoomScript ? 'Generating Script...' : 'Loom Script Gen'}
+                       </button>
+                       <button onClick={handleGenerateDripSequence} disabled={aiDripSequence} className="text-white bg-white/10 hover:bg-white/20 border border-white/[0.05] text-xs px-4 py-2 rounded transition-colors disabled:opacity-50 flex items-center gap-1.5">
                          {aiDripSequence ? '...' : '3-Part Drip Sequence'}
+                       </button>
+                       <button onClick={handleGenerateProposalAndContract} disabled={generatingProposal} className="text-white bg-gradient-to-r from-emerald-600/20 to-green-600/20 hover:from-emerald-600/40 hover:to-green-600/40 border border-emerald-500/30 text-xs px-4 py-2 rounded transition-colors disabled:opacity-50 flex items-center gap-1.5 !shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                         <FileText size={12} className={generatingProposal ? 'animate-pulse text-emerald-400' : 'text-emerald-400'} /> {generatingProposal ? 'Generating...' : '1-Click Proposal & Contract'}
                        </button>
                        <button onClick={handleROI} disabled={aiROI} className="text-white bg-white/10 hover:bg-white/20 border border-white/[0.05] text-xs px-4 py-2 rounded transition-colors disabled:opacity-50">
                          {aiROI ? '...' : '+ ROI Math'}

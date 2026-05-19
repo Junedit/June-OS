@@ -80,6 +80,8 @@ export default function Prospector() {
   const [agentLoading, setAgentLoading] = useState(false);
   const [agentProgress, setAgentProgress] = useState("");
   
+  const hasYouTubeKey = !!import.meta.env.VITE_YOUTUBE_API_KEY;
+
   const [autopilotOn, setAutopilotOn] = useState(() => {
     return localStorage.getItem('autopilotOn') === 'true';
   });
@@ -92,17 +94,21 @@ export default function Prospector() {
     localStorage.setItem('autopilotNiche', autopilotNiche);
   }, [autopilotOn, autopilotNiche]);
 
+  useEffect(() => {
+     // Autopilot starts are managed by GodModeBackgroundWorker 24/7.
+  }, [autopilotOn, user]);
+
+
   
 
   
-  async function handleRunAgent(isBackground = false) {
+  async function handleRunAgent() {
     if (!user) return;
     if (agentLoading) return;
-    const today = new Date().toISOString().split('T')[0];
     
     setAgentLoading(true);
-    if (!isBackground) setAgentProgress("Initializing June Prime...");
-    if (isBackground) toast("🤖 AI Autopilot started daily scan in background...");
+    setAgentProgress("Initializing June Prime...");
+    
     let targetNiche = autopilotNiche === 'OVERALL' ? 'OVERALL' : autopilotNiche;
     const isSunday = new Date().getDay() === 0;
 
@@ -111,17 +117,15 @@ export default function Prospector() {
     if (targetNiche === 'OVERALL' && !isSunday) {
       const activeNiches = YOUTUBE_NICHES.filter(n => !n.startsWith('🔥'));
       targetNiche = activeNiches[Math.floor(Math.random() * activeNiches.length)];
-      if (!isBackground) setAgentProgress(`Not Sunday. Targeting high-value leaders in ${targetNiche}...`);
-      if (isBackground) toast(`🤖 Not Sunday. OmniScout targeting high-value leaders in ${targetNiche}...`);
+      setAgentProgress(`Not Sunday. Targeting high-value leaders in ${targetNiche}...`);
     } else if (targetNiche === 'OVERALL' && isSunday) {
-      if (!isBackground) setAgentProgress("Sunday Video Editor Global Scan initiated...");
-      if (isBackground) toast("🤖 Sunday Video Editor Global Scan initiated...");
+      setAgentProgress("Sunday Video Editor Global Scan initiated...");
     }
 
     try {
       setAgentProgress("June Prime: Scanning global databases for top matches...");
       // Ask our AI services to fetch broader set of leads globally
-      const channels = await generateBulkChannelLeads(targetNiche, 10, 5000, "Global");
+      const channels = await generateBulkChannelLeads(targetNiche, 20, 1000, "Global");
       
       // Filter out low quality leads. Be more lenient on Sundays for the broad scan, stricter on other days.
       const eliteChannels = channels.filter(c => {
@@ -131,7 +135,7 @@ export default function Prospector() {
             // Strictly valuable leads on non-Sundays
             return c.leadScore?.includes('A') || c.leadScore?.includes('B');
          }
-      }).slice(0, 15);
+      }).slice(0, 10);
       
       setAgentProgress(`June Prime: Deep-analyzing ${eliteChannels.length} leads & generating tailored pitches...`);
       const { generateInstantColdPitch, generateSingleLeadAnalysis } = await import('../services/ai');
@@ -144,7 +148,15 @@ export default function Prospector() {
               const brandName = item.channelName || 'Unknown Brand';
               const existingQuery = firestoreQuery(collection(db, 'leads'), where('ownerId', '==', user.uid), where('brandName', '==', brandName));
               const existingDocs = await getDocs(existingQuery);
-              if (!existingDocs.empty) {
+              let isDuplicate = !existingDocs.empty;
+
+              if (!isDuplicate && item.channelUrl) {
+                  const urlQuery = firestoreQuery(collection(db, 'leads'), where('ownerId', '==', user.uid), where('companyUrl', '==', item.channelUrl));
+                  const urlDocs = await getDocs(urlQuery);
+                  isDuplicate = !urlDocs.empty;
+              }
+
+              if (isDuplicate) {
                 console.log(`Skipping duplicate lead: ${brandName}`);
                 continue;
               }
@@ -156,6 +168,10 @@ export default function Prospector() {
               
               const rawEmail = (item.publicEmail && item.publicEmail.includes('@')) ? item.publicEmail.split(/[\s/,]+/).find((e: string) => e.includes('@')) : 'unknown@example.com';
               const cleanEmail = rawEmail && /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(rawEmail) ? rawEmail : 'unknown@example.com';
+
+              // Set Follow-up Date (3 days from now) for Drip Sequence
+              const followUpDate = new Date();
+              followUpDate.setDate(followUpDate.getDate() + 3);
 
               await addDoc(collection(db, 'leads'), {
                   brandName: brandName,
@@ -170,10 +186,12 @@ export default function Prospector() {
                   distressSignal: item.distressSignal || false,
                   predictedLTV: analysis.predictedLTV || item.predictedLTV || 'Unknown',
                   estimatedUpsideValue: analysis.estimatedUpsideValue || item.estimatedUpsideValue || 'Unknown',
-                  message: `[AI AUTOPILOT GENERATED]\nSubs: ${item.subscriberCount} | 30d Views: ${item.thirtyDayViews} | Growth: ${item.growthRate}\nEstimated Rev: ${item.estimatedRevenue || 'Unknown'}\nTarget Rate: ${item.targetEditorRate || 'Unknown'}\n\nLead Score: ${analysis.leadScore} (IQ: ${analysis.qualityScore}) - ${analysis.scoreReason}\nFinancial Upside (AI): ${analysis.estimatedUpsideValue || 'Unknown'}\nPredicted 12-Month LTV: ${analysis.predictedLTV || item.predictedLTV || 'Unknown'}\nAlgorithmic Distress: ${item.distressSignal ? 'DETECTED' : 'None'}\n\nHiring Mentions: ${analysis.hiringMentions || item.hiringMentions || 'No explicit mention.'}\n\nLast Video: ${item.lastVideoPerformance}\n\nDeep Dive: ${analysis.deepDiveInfo || ''}\n\nContent Fixes: ${analysis.contentFixes || ''}\n\nGenerated Pitches Saved internally.`,
+                  message: `[AI AUTOPILOT GENERATED]\nSubs: ${item.subscriberCount} | 30d Views: ${item.thirtyDayViews} | Growth: ${item.growthRate}\nEstimated Rev: ${item.estimatedRevenue || 'Unknown'}\nTarget Rate: ${item.targetEditorRate || 'Unknown'}\n\nLead Score: ${analysis.leadScore} (IQ: ${analysis.qualityScore}) - ${analysis.scoreReason}\nFinancial Upside (AI): ${analysis.estimatedUpsideValue || 'Unknown'}\nPredicted 12-Month LTV: ${analysis.predictedLTV || item.predictedLTV || 'Unknown'}\nAlgorithmic Distress: ${item.distressSignal ? 'DETECTED' : 'None'}\n\nHiring Mentions: ${analysis.hiringMentions || item.hiringMentions || 'No explicit mention.'}\n\nLast Video: ${item.lastVideoPerformance}\n\nDeep Dive: ${analysis.deepDiveInfo || ''}\n\nContent Fixes: ${analysis.contentFixes || ''}\n\nGenerated Pitches Saved internally.\nA Drip Sequence is queued to follow up in 3 days.`,
                   status: 'new',
                   ownerId: user.uid,
                   pitchVariants: pitchData,
+                  dripSequence: true,
+                  followUpDate: followUpDate,
                   createdAt: serverTimestamp()
               });
               addedCount++;
@@ -187,7 +205,6 @@ export default function Prospector() {
       } else {
         toast.info(`AI Autopilot completed: Scanned elements, but none passed the quality threshold.`);
       }
-      localStorage.setItem('autopilotLastRunDate', today);
       setRadarModalOpen(false);
     } catch (e: any) {
       toast.error("June Prime encountered an error: " + e.message);
@@ -225,7 +242,7 @@ export default function Prospector() {
     
     try {
       // Fetch up to 500 items to accommodate the request for scanning globally across "all of youtube"
-      const channels = await generateBulkChannelLeads(query, 12, minSubs, countryFilter); 
+      const channels = await generateBulkChannelLeads(query, 24, minSubs, countryFilter); 
       if (Array.isArray(channels)) {
          setResults(channels);
       }
@@ -339,12 +356,24 @@ export default function Prospector() {
         const brandName = item.channelName || 'Unknown Brand';
         const existingQuery = firestoreQuery(collection(db, 'leads'), where('ownerId', '==', user.uid), where('brandName', '==', brandName));
         const existingDocs = await getDocs(existingQuery);
-        if (!existingDocs.empty) continue;
+        let isDuplicate = !existingDocs.empty;
+        
+        if (!isDuplicate && item.channelUrl) {
+            const urlQuery = firestoreQuery(collection(db, 'leads'), where('ownerId', '==', user.uid), where('companyUrl', '==', item.channelUrl));
+            const urlDocs = await getDocs(urlQuery);
+            isDuplicate = !urlDocs.empty;
+        }
+        
+        if (isDuplicate) continue;
 
         // 1. Generate Custom Pitch
         const pitchData = await generateInstantColdPitch(item);
 
-        // 2. Add Lead
+        // 2. Set Follow-up Date (3 days from now) for Drip Sequence
+        const followUpDate = new Date();
+        followUpDate.setDate(followUpDate.getDate() + 3);
+
+        // 3. Add Lead
         const leadRef = await addDoc(collection(db, 'leads'), {
           brandName: brandName,
           companyUrl: item.channelUrl || '',
@@ -356,10 +385,13 @@ export default function Prospector() {
           estimatedUpsideValue: item.estimatedUpsideValue || 'Unknown',
           distressSignal: item.distressSignal || false,
           predictedLTV: item.predictedLTV || 'Unknown',
-          message: `Generated AI Scout Lead\n\nSubs: ${item.subscriberCount} | 30d Views: ${item.thirtyDayViews} | Growth: ${item.growthRate}`,
+          niche: item.niche || 'YouTube/Content',
+          message: `[AUTO CAMPAIGN]\nSubs: ${item.subscriberCount} | Rev: ${item.estimatedRevenue || 'Unknown'}\nTarget Rate: ${item.targetEditorRate || 'Unknown'}\nScore: ${item.leadScore || 'Unknown'} - ${item.scoreReason || ''}\nLTV: ${item.predictedLTV || 'Unknown'}\n\nGenerated Pitches available.\nA Drip Sequence is queued to follow up in 3 days.`,
           status: 'new',
           ownerId: user.uid,
           pitchVariants: pitchData,
+          dripSequence: true,
+          followUpDate: followUpDate,
           createdAt: serverTimestamp()
         });
 
@@ -434,7 +466,15 @@ export default function Prospector() {
         const brandName = item.channelName || 'Unknown Brand';
         const existingQuery = firestoreQuery(collection(db, 'leads'), where('ownerId', '==', user.uid), where('brandName', '==', brandName));
         const existingDocs = await getDocs(existingQuery);
-        if (!existingDocs.empty) continue; // Skip duplicates
+        let isDuplicate = !existingDocs.empty;
+
+        if (!isDuplicate && item.channelUrl) {
+            const urlQuery = firestoreQuery(collection(db, 'leads'), where('ownerId', '==', user.uid), where('companyUrl', '==', item.channelUrl));
+            const urlDocs = await getDocs(urlQuery);
+            isDuplicate = !urlDocs.empty;
+        }
+
+        if (isDuplicate) continue; // Skip duplicates
 
         await addDoc(collection(db, 'leads'), {
           brandName: brandName,
@@ -480,6 +520,7 @@ export default function Prospector() {
           </button>
           <button 
              onClick={() => setRadarModalOpen(true)}
+             disabled={agentLoading}
              className="bg-white/10 text-white/80 border border-white/20 hover:bg-white/20 px-4 py-2 text-xs font-mono uppercase tracking-[0.2em] font-bold rounded-none flex items-center gap-2 transition-all shadow-[0_4px_24px_rgba(255,255,255,0.15)] disabled:opacity-50"
           >
              <Brain size={14} /> Deploy June Prime
@@ -488,6 +529,19 @@ export default function Prospector() {
       </header>
 
       <div className="p-10 md:p-10 max-w-4xl mx-auto w-full mb-32 flex-1">
+         {!hasYouTubeKey && (
+            <div className="mb-10 bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-2xl p-6 flex flex-col md:flex-row md:items-center gap-6 justify-between">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#FF3B30]/20 flex items-center justify-center text-[#FF3B30]">
+                     <AlertTriangle size={24} />
+                  </div>
+                  <div>
+                     <h3 className="text-white font-bold tracking-tight mb-1">Live Database Offline (Simulated Leads Only)</h3>
+                     <p className="text-sm text-white/60">June Prime is using AI to generate simulated leads. Please configure <code className="bg-black/30 font-mono text-[11px] px-1.5 py-0.5 rounded text-[#FF3B30]">VITE_YOUTUBE_API_KEY</code> in your environment variables to fetch real targets.</p>
+                  </div>
+               </div>
+            </div>
+         )}
          <div className="text-center mb-16 relative z-10 font-mono">
             <div className="inline-flex items-center justify-center px-4 py-1.5 bg-white/5 text-white/80 font-mono text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm mb-6 border border-white/20 shadow-[0_4px_24px_rgba(255,255,255,0.15)] relative overflow-hidden group">
                <div className="absolute inset-0 bg-white/10 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
@@ -698,13 +752,30 @@ export default function Prospector() {
 
          {/* Results */}
          {loading && (
-           <div className="bg-transparent border border-white/20 rounded-none p-16 flex flex-col items-center justify-center min-h-[300px] shadow-[0_4px_24px_rgba(255,255,255,0.15)] relative overflow-hidden">
-             <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-pulse opacity-50"></div>
-             <div className="w-16 h-16 border border-white/20 border-t-emerald-500 rounded-full animate-spin mb-8 relative flex items-center justify-center">
-                <div className="w-8 h-8 border border-white/20 border-b-[var(--brand-primary)] rounded-full animate-spin direction-reverse"></div>
+           <div className="bg-transparent/20 border border-white/[0.04] rounded-none overflow-hidden fade-in flex flex-col relative z-20">
+             <div className="bg-[#000000] border-b border-white/[0.04] p-5 flex justify-between items-center px-8 w-full">
+               <div className="h-4 w-48 bg-white/5 animate-pulse rounded-sm"></div>
+               <div className="h-6 w-32 bg-white/5 animate-pulse rounded-sm"></div>
              </div>
-             <p className="text-white/80 font-mono text-[10px] animate-pulse tracking-[0.3em] font-bold uppercase">INITIALIZING SCAN PROTOCOL / MINING GLOBAL INDEX...</p>
-             <p className="text-zinc-600 font-mono text-[8px] mt-4 tracking-[0.5em] uppercase">Bypassing constraints...</p>
+             <div className="p-0">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
+                 {[1, 2, 3, 4, 5, 6].map((i) => (
+                   <div key={i} className="p-8 border-b border-r border-white/[0.02] flex flex-col gap-6">
+                     <div className="flex gap-4">
+                       <div className="w-14 h-14 bg-white/5 animate-pulse rounded-full flex-shrink-0"></div>
+                       <div className="flex flex-col gap-3 w-full pt-1">
+                         <div className="h-4 w-3/4 bg-white/5 animate-pulse rounded-sm"></div>
+                         <div className="h-3 w-1/2 bg-white/5 animate-pulse rounded-sm"></div>
+                       </div>
+                     </div>
+                     <div className="flex gap-3">
+                       <div className="h-8 flex-1 bg-white/5 animate-pulse rounded-sm"></div>
+                       <div className="h-8 flex-1 bg-white/5 animate-pulse rounded-sm"></div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
            </div>
          )}
 
@@ -950,7 +1021,16 @@ export default function Prospector() {
                                  <div className="absolute top-0 left-0 w-1 bg-[var(--brand-primary)] text-white h-full"></div>
                                  <span className="font-bold text-zinc-100 uppercase tracking-[0.2em] text-[9px] flex items-center gap-2"><Target size={12} /> Optimization Vectors (Pain Points)</span> 
                                  <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-[100px]">
-                                    <p className="text-[11px] text-white/80 font-mono leading-relaxed whitespace-pre-wrap">{item.contentFixes || 'Awaiting deep audit extraction...'}</p>
+                                    {auditLoading === searchResultsIndex ? (
+                                      <div className="space-y-3 animate-pulse mt-2">
+                                         <div className="h-2 bg-white/20 rounded w-full"></div>
+                                         <div className="h-2 bg-white/20 rounded w-full"></div>
+                                         <div className="h-2 bg-white/20 rounded w-3/4"></div>
+                                         <div className="h-2 bg-white/20 rounded w-4/5"></div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-[11px] text-white/80 font-mono leading-relaxed whitespace-pre-wrap">{item.contentFixes || 'Awaiting deep audit extraction...'}</p>
+                                    )}
                                  </div>
                               </div>
                            </div>
@@ -960,31 +1040,42 @@ export default function Prospector() {
                               <div className="flex flex-col h-1/2 min-h-[150px]">
                                  <span className="text-[9px] uppercase tracking-[0.2em] text-white/60 font-mono mb-3 flex items-center gap-2"><Search size={12} /> AI Deep Dive Context</span>
                                  <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-2">
-                                    <p className="text-[10px] font-mono text-white/60 leading-relaxed whitespace-pre-wrap">{item.deepDiveInfo || 'Run a deep audit to uncover advanced analytics and content context metrics.'}</p>
-                                    
-                                    {item.creatorPersonality && item.creatorPersonality !== 'Unknown' && (
-                                       <div className="mt-4 pt-3 border-t border-white/[0.04]">
-                                         <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Psychographic Profile:</p>
-                                         <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.creatorPersonality}</p>
-                                       </div>
-                                    )}
-                                    {item.audienceDemographic && item.audienceDemographic !== 'Unknown' && item.audienceDemographic !== 'Male 18-35' && (
-                                       <div className="mt-3 pt-3 border-t border-white/[0.04]">
-                                         <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Audience Demographics:</p>
-                                         <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.audienceDemographic}</p>
-                                       </div>
-                                    )}
-                                    {item.websiteTraffic && item.websiteTraffic !== 'Unknown' && (
-                                       <div className="mt-3 pt-3 border-t border-white/[0.04]">
-                                         <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Brand Funnel / Architecture:</p>
-                                         <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.websiteTraffic}</p>
-                                       </div>
-                                    )}
-                                    {item.socialEngagement && item.socialEngagement !== 'Unknown' && (
-                                       <div className="mt-3 pt-3 border-t border-white/[0.04]">
-                                         <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Social Ecosystem:</p>
-                                         <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.socialEngagement}</p>
-                                       </div>
+                                     {auditLoading === searchResultsIndex ? (
+                                      <div className="space-y-3 animate-pulse mt-2">
+                                         <div className="h-2 bg-white/20 rounded w-full"></div>
+                                         <div className="h-2 bg-white/20 rounded w-5/6"></div>
+                                         <div className="h-2 bg-white/20 rounded w-full"></div>
+                                         <div className="h-2 bg-white/20 rounded w-3/4"></div>
+                                      </div>
+                                    ) : (
+                                       <>
+                                         <p className="text-[10px] font-mono text-white/60 leading-relaxed whitespace-pre-wrap">{item.deepDiveInfo || 'Run a deep audit to uncover advanced analytics and content context metrics.'}</p>
+                                         
+                                         {item.creatorPersonality && item.creatorPersonality !== 'Unknown' && (
+                                            <div className="mt-4 pt-3 border-t border-white/[0.04]">
+                                              <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Psychographic Profile:</p>
+                                              <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.creatorPersonality}</p>
+                                            </div>
+                                         )}
+                                         {item.audienceDemographic && item.audienceDemographic !== 'Unknown' && item.audienceDemographic !== 'Male 18-35' && (
+                                            <div className="mt-3 pt-3 border-t border-white/[0.04]">
+                                              <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Audience Demographics:</p>
+                                              <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.audienceDemographic}</p>
+                                            </div>
+                                         )}
+                                         {item.websiteTraffic && item.websiteTraffic !== 'Unknown' && (
+                                            <div className="mt-3 pt-3 border-t border-white/[0.04]">
+                                              <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Brand Funnel / Architecture:</p>
+                                              <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.websiteTraffic}</p>
+                                            </div>
+                                         )}
+                                         {item.socialEngagement && item.socialEngagement !== 'Unknown' && (
+                                            <div className="mt-3 pt-3 border-t border-white/[0.04]">
+                                              <p className="text-[9px] font-mono text-white/80/70 uppercase tracking-[0.2em] mb-1">Social Ecosystem:</p>
+                                              <p className="text-[10px] font-mono text-white/80 whitespace-pre-wrap">{item.socialEngagement}</p>
+                                            </div>
+                                         )}
+                                       </>
                                     )}
                                  </div>
                               </div>
@@ -1246,7 +1337,7 @@ export default function Prospector() {
                </button>
                <button 
                  disabled={agentLoading}
-                 onClick={() => handleRunAgent(false)}
+                 onClick={() => handleRunAgent()}
                  className="flex-[2] bg-white/10 border border-white/20 hover:border-white/[0.04] text-white/80 hover:text-white/80 hover:bg-white/20 font-bold py-3 text-[10px] uppercase tracking-[0.2em] font-mono rounded-none transition-all disabled:opacity-50 flex items-center justify-center gap-3 drop-shadow-[0_4px_24px_rgba(255,255,255,0.15)]"
                >
                  <Brain size={14} /> {agentLoading ? 'EXECUTING...' : 'EXECUTE SCAN'}

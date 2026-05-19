@@ -492,9 +492,26 @@ Format the output beautifully with markdown headings and bullet points. Be conci
         {viewMode === 'audit' && (
           <>
             {loading && (
-              <div className="flex justify-center flex-col items-center py-20">
-                 <div className="w-12 h-12 border-4 border-white/30 border-t-[var(--brand-primary)] rounded-full animate-spin mb-4"></div>
-                 <p className="text-zinc-100 font-bold tracking-[0.2em] text-sm animate-pulse">Scanning YouTube API...</p>
+              <div className="space-y-6 animate-pulse mt-8">
+                <div className="bg-[#000] border border-white/[0.04] flex flex-col relative overflow-hidden h-[300px] mb-4">
+                   <div className="w-full h-48 bg-white/5 relative overflow-hidden shrink-0"></div>
+                   <div className="flex flex-col md:flex-row items-center md:items-start gap-10 px-6">
+                     <div className="w-32 h-32 rounded-full border-4 border-[#000] bg-white/10 -mt-20 shrink-0"></div>
+                     <div className="flex-1 w-full pt-4 space-y-4">
+                        <div className="h-8 bg-white/10 w-1/3 rounded"></div>
+                        <div className="h-4 bg-white/5 w-1/4 rounded"></div>
+                        <div className="h-10 bg-white/5 w-full max-w-xl rounded"></div>
+                     </div>
+                   </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="bg-[#0f0f0f] border border-white/[0.04] p-5 h-24 rounded flex flex-col justify-center">
+                       <div className="h-4 bg-white/10 w-1/2 mb-2 rounded"></div>
+                       <div className="h-6 bg-white/5 w-3/4 rounded"></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -607,7 +624,38 @@ Format the output beautifully with markdown headings and bullet points. Be conci
               </div>
             </div>
 
-            {audit && (
+            {loadingAudit && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mt-8 animate-pulse fade-in">
+                <div className="lg:col-span-4 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                  </div>
+                  <div className="h-6 w-48 bg-white/10 rounded"></div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-zinc-800 to-transparent ml-4"></div>
+                </div>
+
+                <div className="bg-[#0f0f0f] border border-white/[0.04] p-5 h-24 rounded flex flex-col justify-center">
+                   <div className="h-4 bg-white/10 w-1/2 mb-2 rounded"></div>
+                   <div className="h-4 bg-white/5 w-3/4 rounded"></div>
+                </div>
+                
+                <div className="bg-[#0f0f0f] border border-white/[0.04] p-5 h-24 rounded flex flex-col justify-center">
+                   <div className="h-4 bg-white/10 w-1/2 mb-2 rounded"></div>
+                   <div className="h-4 bg-white/5 w-3/4 rounded"></div>
+                </div>
+
+                <div className="bg-[#0f0f0f] border border-white/[0.04] p-8 h-[300px] rounded flex flex-col lg:col-span-2">
+                   <div className="h-4 bg-white/10 w-1/3 mb-4 rounded"></div>
+                   <div className="flex-1 space-y-3">
+                     <div className="h-4 bg-white/5 w-full rounded"></div>
+                     <div className="h-4 bg-white/5 w-5/6 rounded"></div>
+                     <div className="h-4 bg-white/5 w-4/5 rounded"></div>
+                     <div className="h-4 bg-white/5 w-full rounded"></div>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {audit && !loadingAudit && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 animate-in slide-in-from-bottom-4 fade-in duration-500">
                 <div className="lg:col-span-4 flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white/10 border border-white/30 flex items-center justify-center">

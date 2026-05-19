@@ -32,7 +32,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
-  const { user, userRole, logOut } = useAuth();
+  const { user, userRole, userData, logOut } = useAuth();
   
   const menuItems = [
     { id: 'home', label: 'Command Center', icon: Hexagon },
@@ -92,15 +92,25 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         {user && (
           <div className="mt-auto pt-6 border-t border-white/[0.03]">
             <div className="flex items-center gap-3 p-3 bg-white/[0.02] border border-white/[0.03] rounded-2xl hover:bg-white/[0.02] transition-colors cursor-pointer group">
-              {user.photoURL ? (
+              {userData?.avatarUrl ? (
+                  <img
+                    alt="Profile"
+                    className="w-9 h-9 rounded-full object-cover border border-white/[0.04] transition-all duration-500 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+                    src={userData.avatarUrl}
+                  />
+              ) : userData?.avatarEmoji ? (
+                  <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-xl border border-white/[0.04] group-hover:border-[var(--brand-primary)]/40 transition-colors shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+                      {userData.avatarEmoji}
+                  </div>
+              ) : user.photoURL ? (
                   <img
                     alt="Profile"
                     className="w-9 h-9 rounded-full object-cover border border-white/[0.04] grayscale group-hover:grayscale-0 transition-all duration-500"
                     src={user.photoURL}
                   />
               ) : (
-                  <div className="w-9 h-9 rounded-full bg-white/5 text-white flex items-center justify-center text-sm font-bold border border-white/[0.04] group-hover:border-white/[0.02]0 transition-colors">
-                      {user.email?.charAt(0).toUpperCase()}
+                  <div className="w-9 h-9 rounded-full bg-white/5 text-white flex items-center justify-center text-sm font-bold border border-white/[0.04] group-hover:border-[var(--brand-primary)]/40 transition-colors">
+                      {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                   </div>
               )}
               <div className="text-left flex-1 min-w-0">

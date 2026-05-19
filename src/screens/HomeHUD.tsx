@@ -56,9 +56,17 @@ export default function HomeHUD({ navigateTo }: { navigateTo: (tab: string) => v
 
   const [urgentItems, setUrgentItems] = useState<any[]>([]);
   const [omniScoutLeads, setOmniScoutLeads] = useState<any[]>([]);
+  const [radarEvents, setRadarEvents] = useState<any[]>([]);
   
   useEffect(() => {
     if (!user) return;
+
+    // Fetch Activity Logs (Sales Room Radar)
+    const logsQ = query(collection(db, 'activity_logs'), where('ownerId', '==', user.uid));
+    const unsubLogs = onSnapshot(logsQ, (snap) => {
+       const logs = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a: any, b: any) => (b.createdAt?.toMillis() || Date.now()) - (a.createdAt?.toMillis() || Date.now())).slice(0, 10);
+       setRadarEvents(logs);
+    }, e => handleFirestoreError(e, OperationType.LIST, 'activity_logs'));
 
     // Fetch Leads
     const leadsQ = query(collection(db, 'leads'), where('ownerId', '==', user.uid));
@@ -200,6 +208,7 @@ export default function HomeHUD({ navigateTo }: { navigateTo: (tab: string) => v
     }, e => handleFirestoreError(e, OperationType.LIST, 'leads'));
 
     return () => {
+      unsubLogs();
       unsubLeads();
       unsubInvoices();
       unsubProjects();
@@ -261,7 +270,7 @@ export default function HomeHUD({ navigateTo }: { navigateTo: (tab: string) => v
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Next Best Action AI Engine */}
         <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.15}} className="glass-card overflow-hidden flex flex-col relative group">
            <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--brand-primary)]/40 to-transparent"></div>
@@ -271,7 +280,7 @@ export default function HomeHUD({ navigateTo }: { navigateTo: (tab: string) => v
              </h2>
              <span className="text-[10px] font-mono tracking-[0.1em] text-[var(--brand-primary)] px-2 py-1 rounded-md bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 uppercase font-bold">Auto-Pilot</span>
            </div>
-           <div className="p-3 flex-1 flex flex-col gap-1 min-h-[250px] overflow-y-auto custom-scrollbar">
+           <div className="p-3 flex-1 flex flex-col gap-1 min-h-[300px] max-h-[300px] overflow-y-auto custom-scrollbar">
              {urgentItems.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-white/40">
                   <CheckCircle2 size={32} className="mb-3 opacity-20" />
@@ -304,17 +313,17 @@ export default function HomeHUD({ navigateTo }: { navigateTo: (tab: string) => v
         </motion.div>
 
         {/* OmniScout Mini-Feed */}
-        <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="glass-card rounded-3xl border border-[#FF3B30]/10 overflow-hidden flex flex-col relative shadow-[0_0_40px_rgba(255,59,48,0.05)]">
+        <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.2}} className="glass-card overflow-hidden flex flex-col relative">
            <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FF3B30]/40 to-transparent"></div>
            <div className="p-5 border-b border-white/[0.05] flex justify-between items-center bg-[#111111]/80">
              <h2 className="text-sm font-mono uppercase tracking-[0.1em] text-white font-bold flex items-center gap-2">
-               <Sparkles size={16} className="text-[#FF3B30]" /> OmniScout Findings
+               <Sparkles size={16} className="text-[#FF3B30]" /> OmniScout Finds
              </h2>
              <button onClick={() => navigateTo('prospector')} className="text-[10px] uppercase font-mono tracking-[0.1em] text-[#FF3B30] hover:text-white transition-colors flex items-center gap-1">
                Open Radar <ChevronRight size={12} />
              </button>
            </div>
-           <div className="p-3 flex-1 flex flex-col gap-2 min-h-[250px]">
+           <div className="p-3 flex-1 flex flex-col gap-2 min-h-[300px] max-h-[300px] overflow-y-auto custom-scrollbar">
              {omniScoutLeads.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-white/40">
                   <Target size={32} className="mb-3 opacity-20" />
@@ -337,6 +346,44 @@ export default function HomeHUD({ navigateTo }: { navigateTo: (tab: string) => v
                         <button onClick={() => navigateTo('leads')} className="text-[10px] uppercase font-mono tracking-[0.1em] text-white/60 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded flex items-center gap-1">
                           View Target
                         </button>
+                     </div>
+                  </div>
+                ))
+             )}
+           </div>
+        </motion.div>
+
+        {/* Sales Room Telemetry Radar */}
+        <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{delay: 0.25}} className="glass-card overflow-hidden flex flex-col relative shadow-[0_0_40px_rgba(52,199,89,0.05)] border border-[#34C759]/10">
+           <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-transparent via-[#34C759]/40 to-transparent"></div>
+           <div className="p-5 border-b border-white/[0.05] flex justify-between items-center bg-[#111111]/80">
+             <h2 className="text-sm font-mono uppercase tracking-[0.1em] text-white font-bold flex items-center gap-2">
+               <AlertCircle size={16} className="text-[#34C759]" /> Client Radar
+             </h2>
+             <span className="flex items-center gap-2 text-[#34C759] text-[10px] font-mono tracking-widest uppercase">
+               <span className="w-1.5 h-1.5 rounded-full bg-[#34C759] animate-ping"></span> Live
+             </span>
+           </div>
+           <div className="p-3 flex-1 flex flex-col gap-2 min-h-[300px] max-h-[300px] overflow-y-auto custom-scrollbar">
+             {radarEvents.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-white/40">
+                  <Play size={32} className="mb-3 opacity-20" />
+                  <p className="font-mono text-[10px] uppercase tracking-[0.1em]">Awaiting client telemetry...</p>
+                </div>
+             ) : (
+                radarEvents.map((event: any) => (
+                  <div key={event.id} className="bg-[#141414] border border-[#34C759]/10 p-4 rounded-2xl flex flex-col gap-2 relative overflow-hidden group">
+                     {/* Radar sweep effect */}
+                     <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-[#34C759] to-transparent shadow-[0_0_10px_#34C759]"></div>
+                     
+                     <div className="pl-2">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-[#34C759] font-mono uppercase tracking-widest">{event.type === 'deal' ? 'DEAL SIGNED' : 'ROOM VIEW'}</span>
+                          <span className="text-[10px] text-white/40 font-mono">
+                            {event.createdAt?.toDate ? new Date(event.createdAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-white font-medium leading-relaxed">{event.text}</p>
                      </div>
                   </div>
                 ))

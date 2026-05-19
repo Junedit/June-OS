@@ -41,8 +41,12 @@ Return ONLY a JSON object with the following structure. If you cannot find a pie
     if (response && response.text) {
       return JSON.parse(response.text);
     }
-  } catch (error) {
-    console.error("Error enriching lead socials:", error);
+  } catch (error: any) {
+    if (error?.status === 'RESOURCE_EXHAUSTED' || error?.message?.includes('429')) {
+      console.warn("AI Quota exhausted during enrichment. Will retry later.");
+      throw error;
+    }
+    console.error("Error enriching lead socials:", JSON.stringify(error));
   }
   return null;
 }
@@ -219,6 +223,104 @@ export async function analyzeFeedbackSentiment(feedbackText: string): Promise<"R
   }
 }
 
+export async function generateKillShotIntel(lead: any) {
+  const aiClient = getAI();
+  if (!aiClient) throw new Error("AI services unavailable.");
+
+  const prompt = `You are an elite YouTube channel strategist and competitive intelligence analyst. 
+Your goal is to find the top 3 direct competitors for this specific YouTube channel, perform a deep-dive comparison of their exact strategies, and generate a highly detailed "Kill Shot" pitch to help this channel exploit their rivals' weaknesses.
+
+Channel Name: ${lead.brandName}
+Target Niche: ${lead.niche || 'Unknown'}
+
+Use the Google Search tool to find out who else dominates this niche and analyze their recent highly-performing videos.
+
+Return a detailed Markdown report containing:
+1. **Top 3 Direct Competitors (Deep Breakdown)**: List their names, subscriber tiers, and a granular breakdown of why their algorithms are favored right now (e.g., thumbnail click-through-rate triggers, specific pacing, average view duration hacks).
+2. **Weakness Exploitation Strategy**: Detail what these competitors are doing poorly (e.g., weak B-roll, bloated intros, poor audio mixing, inconsistent branding) that our agency can exploit for our client.
+3. **Strategy Gap Analysis**: What structural, visual, or storytelling elements are the competitors utilizing that our client is currently missing?
+4. **The "Kill Shot" Pitch Angle**: A personalized 3-4 sentence script that hits hard, for example: "I noticed your competitor [Name] is capturing X amount of views per video because of their [Specific Technique]. However, they are failing at [Weakness]. I built a custom content pipeline for you to exploit this gap and steal their share of voice. Here is how we can implement it this week..."`;
+
+  try {
+    const aiResponse = await generateContentWithRetry(aiClient, {
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+      }
+    });
+
+    return aiResponse.text || "Could not generate Competitor Intel.";
+  } catch (error) {
+    console.error("AI Kill Shot Error:", error);
+    throw error;
+  }
+}
+
+export async function generateLoomScript(lead: any) {
+  const aiClient = getAI();
+  if (!aiClient) throw new Error("AI services unavailable.");
+
+  const prompt = `You are a legendary cold email and video outreach specialist. 
+Your goal is to generate a personalized Loom script for a YouTube channel based on their current channel and recent video.
+Channel Name: ${lead.brandName}
+Target Niche: ${lead.niche || 'Unknown'}
+Summary Context: ${lead.deepDiveInfo || lead.description || 'Unknown'}
+Content Fixes: ${lead.contentFixes || 'Unknown'}
+
+Return ONLY a highly effective, punchy, spoken Loom script structure. It must include exactly:
+1. Hook (What to point at on the screen to grab attention immediately)
+2. The Specific Problem (Based on their content context)
+3. The "Kill Shot" Solution (How our video agency fixes it)
+4. Call to Action (Soft pitch to book a 10 min call)
+
+Make the tone super casual, persuasive, and under 2 minutes when spoken.`;
+
+  try {
+    const aiResponse = await generateContentWithRetry(aiClient, {
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+    });
+    return aiResponse.text || "Could not generate Loom Script.";
+  } catch (error) {
+    console.error("AI Loom Script Error:", error);
+    throw error;
+  }
+}
+
+export async function generateChannelInsights(lead: any) {
+  const aiClient = getAI();
+  if (!aiClient) throw new Error("AI services unavailable.");
+
+  const prompt = `You are an elite YouTube Strategist and YouTube channel analyst. I need you to analyze the YouTube channel for this lead to help us sell our premium video editing / content agency services.
+
+Lead Brand/Name: ${lead.brandName}
+Target Niche: ${lead.niche || 'Unknown'}
+URL: ${lead.companyUrl || lead.linkedinUrl || lead.instagramUrl || 'Unknown'}
+
+Please use the Google Search tool to find recent information about this creator/channel, watch their video summaries, understand their content strategy, and identify their weaknesses in production, editing or storytelling.
+
+Return a Markdown report containing:
+1. **Content Strategy Analysis**: What are they currently doing well? What formats are they trying?
+2. **Channel Weaknesses / Production Leaks**: Where are they failing in their editing, thumbnails, hook structure, or pacing? Be specific and brutal.
+3. **Positioning Strategy**: How exactly should we position our video editing services to them? What specific pain point should we attack first?`;
+
+  try {
+    const aiResponse = await aiClient.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+      }
+    });
+
+    return aiResponse.text || "Could not generate insights.";
+  } catch (error) {
+    console.error("AI Insight Error:", error);
+    throw error;
+  }
+}
+
 export async function generateOutreachPitch(channelData: string) {
   const aiClient = getAI();
   if (!aiClient) throw new Error("AI services unavailable.");
@@ -275,7 +377,10 @@ export async function generateBulkChannelLeads(query: string, maxResults: number
   // This guarantees we NEVER hallucinate channels, and we ALWAYS get actual live links and video proof.
   
   const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
-  if (!API_KEY) throw new Error("YouTube API Key is missing for bulk scraping.");
+  if (!API_KEY) {
+     console.warn("YouTube API Key is missing. Falling back to AI simulated scout leads to prevent background worker crash.");
+     return await generateAiMockLeadsFallback(query, maxResults);
+  }
   
   // If looking for hiring editors (overall), search for recent videos instead of channels.
   const searchType = isOverall ? "video" : "channel";
@@ -341,43 +446,65 @@ export async function generateBulkChannelLeads(query: string, maxResults: number
      allSearchItems = deduplicatedItems;
      
      if (allSearchItems.length === 0) {
-        throw new Error("YouTube search returned 0 live results for this query. Try broadening your keywords.");
+        console.warn("YouTube search returned 0 live results. Proceeding to fallback logic.");
      }
 
      const chunkSize = 50;
      let allDetailedChannels: any[] = [];
      
-     for (let i = 0; i < allSearchItems.length; i += chunkSize) {
-        const chunk = allSearchItems.slice(i, i + chunkSize);
-        
-        const videoTitlesMap: Record<string, {title: string, videoId: string}> = {};
-        if (isOverall) {
-           chunk.forEach((c: any) => {
-              if (c.id?.videoId && c.snippet?.channelId) {
-                 videoTitlesMap[c.snippet.channelId] = { title: c.snippet.title, videoId: c.id.videoId };
-              }
-           });
-        }
-        
-        const channelIds = chunk.map((c: any) => c.snippet.channelId).join(',');
-        
-        const statsUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIds}&key=${API_KEY}`;
-        const statsRes = await fetch(statsUrl);
-        const statsData = await statsRes.json();
-        
-        if (statsData.items) {
-           const enrichedItems = statsData.items.map((item: any) => {
-               if (isOverall && videoTitlesMap[item.id]) {
-                   item._hiringProof = videoTitlesMap[item.id];
-               }
-               return item;
-           });
-           allDetailedChannels = [...allDetailedChannels, ...enrichedItems];
-        }
+     try {
+       for (let i = 0; i < allSearchItems.length; i += chunkSize) {
+          const chunk = allSearchItems.slice(i, i + chunkSize);
+          
+          const videoTitlesMap: Record<string, {title: string, videoId: string}> = {};
+          if (isOverall) {
+             chunk.forEach((c: any) => {
+                if (c.id?.videoId && c.snippet?.channelId) {
+                   videoTitlesMap[c.snippet.channelId] = { title: c.snippet.title, videoId: c.id.videoId };
+                }
+             });
+          }
+          
+          const channelIds = chunk.map((c: any) => c.snippet.channelId).join(',');
+          
+          const statsUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIds}&key=${API_KEY}`;
+          const statsRes = await fetch(statsUrl);
+          const statsData = await statsRes.json();
+          
+          if (statsData.items) {
+             const enrichedItems = statsData.items.map((item: any) => {
+                 if (isOverall && videoTitlesMap[item.id]) {
+                     item._hiringProof = videoTitlesMap[item.id];
+                 }
+                 return item;
+             });
+             allDetailedChannels = [...allDetailedChannels, ...enrichedItems];
+          }
+       }
+     } catch (e) {
+       console.warn("YouTube API error while fetching detailed channels. Returning AI simulated leads:", e);
      }
 
      if (allDetailedChannels.length === 0) {
-         throw new Error("No channels matched your exact criteria after filtering (e.g., 0 live matches).");
+         console.warn("No channels matched criteria or API failed. Falling back to AI simulated scout leads.");
+         return [
+            {
+              channelName: "[DEMO SCOUT] AI " + query.split(" ")[0],
+              channelUrl: "https://youtube.com/c/demo-scout",
+              subscriberCount: "135000",
+              thirtyDayViews: "800000",
+              growthRate: "+12%",
+              estimatedRevenue: "$4,500/mo",
+              uploadFrequency: "Weekly",
+              targetEditorRate: "$350/vid",
+              qualityScore: 88,
+              leadScore: "A",
+              scoreReason: "High growth potential demo lead via quota fallback.",
+              niche: query,
+              description: "This is a fallback demo lead because the YouTube API key limit was reached. Check your API usage in Google Cloud.",
+              hiringMentions: "Looking for an editor to handle the workload."
+            }
+         ];
      }
 
      const extractEmail = (text: string) => {

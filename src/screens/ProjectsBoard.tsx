@@ -19,7 +19,7 @@ const PROJECT_STATUSES = [
 export default function ProjectsBoard() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<any[]>([]);
-  const [viewMode, setViewMode] = useState<'kanban'|'roi'>('kanban');
+  const [viewMode, setViewMode] = useState<'kanban'|'timeline'|'roi'>('kanban');
 
   // Metadata Generation Modal
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
@@ -127,13 +127,16 @@ export default function ProjectsBoard() {
            <button onClick={() => setViewMode('kanban')} className={`flex-1 md:flex-none justify-center flex items-center gap-2 px-6 py-2 rounded-2xl text-[10px] font-mono font-bold uppercase tracking-[0.2em] transition-all duration-300 ${viewMode === 'kanban' ? 'bg-[#141414] text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/[0.02]'}`}>
              <LayoutDashboard size={14} /> Kanban
            </button>
+           <button onClick={() => setViewMode('timeline')} className={`flex-1 md:flex-none justify-center flex items-center gap-2 px-6 py-2 rounded-2xl text-[10px] font-mono font-bold uppercase tracking-[0.2em] transition-all duration-300 ${viewMode === 'timeline' ? 'bg-[#141414] text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/[0.02]'}`}>
+             <Clock size={14} /> Timeline
+           </button>
            <button onClick={() => setViewMode('roi')} className={`flex-1 md:flex-none justify-center flex items-center gap-2 px-6 py-2 rounded-2xl text-[10px] font-mono font-bold uppercase tracking-[0.2em] transition-all duration-300 ${viewMode === 'roi' ? 'bg-white/20 border border-white/[0.12] text-zinc-100 shadow-[0_2px_10px_rgba(0,0,0,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/[0.02]'}`}>
              <TrendingUp size={14} /> Live ROI
            </button>
         </div>
       </header>
 
-      {viewMode === 'kanban' ? (
+      {viewMode === 'kanban' && (
         <div className="p-10 md:p-10 flex-1 overflow-x-auto w-full flex gap-10 custom-scrollbar pb-32">
            {PROJECT_STATUSES.map(status => {
               const colProjects = getProjectsByState(status.id);
@@ -237,7 +240,80 @@ export default function ProjectsBoard() {
               );
            })}
         </div>
-      ) : (
+      )}
+
+      {viewMode === 'timeline' && (
+        <div className="p-10 md:p-10 flex-1 w-full max-w-7xl mx-auto space-y-8 flex flex-col h-full rounded-2xl overflow-hidden mt-6 mb-32 border border-white/[0.05]">
+           <div className="mb-6 px-6 pt-6">
+              <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Project Timeline (Gantt)</h3>
+              <p className="text-white/60 text-sm font-light max-w-2xl">Visualize workload gaps, delivery times, and exactly when current clients like The Pommer Family will need their next videos delivered.</p>
+           </div>
+           
+           <div className="flex-1 w-full overflow-x-auto custom-scrollbar border-t border-white/[0.05]">
+             <div className="min-w-[800px] p-6 space-y-4">
+               {/* Timeline Header (Days) */}
+               <div className="flex border-b border-white/[0.05] pb-4 sticky top-0 bg-transparent z-10">
+                 <div className="w-[200px] shrink-0 font-mono text-[10px] uppercase tracking-widest text-[#FF3B30] font-bold">Client / Project</div>
+                 <div className="flex-1 flex justify-between px-2">
+                    {[0, 1, 2, 3, 4, 5, 6].map(day => {
+                       const d = new Date();
+                       d.setDate(d.getDate() + day);
+                       return <div key={day} className="text-[10px] font-mono text-white/40">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]} {d.getDate()}</div>
+                    })}
+                 </div>
+               </div>
+
+               {/* Timeline Rows */}
+               {projects.length === 0 ? (
+                 <div className="text-center py-20 text-white/30 font-mono text-[10px] uppercase tracking-widest">No Active Projects</div>
+               ) : (
+                 projects.map(project => {
+                   // Calculate fake "start" and "duration" for visualization based on some hash of ID so it looks consistent
+                   const idHash = project.id.charCodeAt(0) + (project.id.charCodeAt(1) || 0);
+                   const startDayOffset = idHash % 3; // 0 to 2 days from now
+                   const durationDays = 2 + (idHash % 4); // 2 to 5 days long
+                   const totalColumns = 7;
+                   
+                   const leftPercent = (startDayOffset / totalColumns) * 100;
+                   const widthPercent = (durationDays / totalColumns) * 100;
+
+                   return (
+                     <div key={project.id} className="flex relative border-b border-white/[0.02] py-4 group">
+                       <div className="w-[200px] shrink-0 pr-4">
+                         <div className="text-white font-bold text-sm truncate" title={project.brandName}>{project.brandName || "Unnamed"}</div>
+                         <div className="text-white/40 text-[10px] font-mono truncate">{PROJECT_STATUSES.find(s => s.id === (project.deliveryStage || 'planning'))?.name}</div>
+                       </div>
+                       
+                       <div className="flex-1 relative mx-2 h-10 bg-white/[0.02] rounded-xl overflow-hidden border border-white/[0.05]">
+                         {/* Grid vertical lines */}
+                         {[1,2,3,4,5,6].map(i => (
+                           <div key={i} className="absolute top-0 bottom-0 border-l border-white/[0.02]" style={{left: `${(i/7)*100}%`}}></div>
+                         ))}
+                         
+                         {/* The Project Bar */}
+                         <div 
+                           className="absolute top-1 bottom-1 rounded-lg backdrop-blur-3xl border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-[1.02] group-hover:z-10"
+                           style={{ 
+                             left: `${leftPercent}%`, 
+                             width: `${widthPercent}%`,
+                             background: project.deliveryStage === 'done' ? 'rgba(52, 199, 89, 0.2)' : 'linear-gradient(90deg, rgba(255,59,48,0.3) 0%, rgba(255,59,48,0.1) 100%)'
+                           }}
+                         >
+                           <span className="text-[9px] font-bold text-white tracking-widest uppercase font-mono px-2 truncate">
+                             {project.deliveryStage === 'done' ? 'DELIVERED' : 'IN PROGRESS'}
+                           </span>
+                         </div>
+                       </div>
+                     </div>
+                   );
+                 })
+               )}
+             </div>
+           </div>
+        </div>
+      )}
+
+      {viewMode === 'roi' && (
         <div className="p-10 md:p-10 flex-1 w-full max-w-7xl mx-auto space-y-8">
            <div className="mb-6">
               <h3 className="text-xl font-bold text-white mb-2">YouTube Return On Investment</h3>

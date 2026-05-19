@@ -7,13 +7,16 @@ import { db } from '../firebase';
 import { toast } from 'sonner';
 import { analyzeFeedbackSentiment } from '../services/ai';
 
-export default function FeedbackClientPlayer({ leadId, reviewerId, url }: { leadId: string, reviewerId?: string, url?: string }) {
+export default function FeedbackClientPlayer({ leadId, reviewerId, url, uploadedAssets }: { leadId: string, reviewerId?: string, url?: string, uploadedAssets?: any[] }) {
   const playerRef = useRef<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasLoggedPlay, setHasLoggedPlay] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const getCleanUrl = (rawUrl?: string) => {
-    if (!rawUrl) return "https://player.vimeo.com/video/1192000101";
+  const getCleanUrl = (rawUrl?: string, assets?: any[]) => {
+    if (assets && assets.length > 0) return assets[assets.length - 1].url;
+    if (!rawUrl) {
+       return "https://player.vimeo.com/video/1192000101";
+    }
     if (rawUrl.trim().startsWith('<iframe')) {
       const srcMatch = rawUrl.match(/src="([^"]+)"/);
       if (srcMatch) return srcMatch[1];
@@ -21,7 +24,7 @@ export default function FeedbackClientPlayer({ leadId, reviewerId, url }: { lead
     return rawUrl;
   };
 
-  const parsedUrl = getCleanUrl(url);
+  const parsedUrl = getCleanUrl(url, uploadedAssets);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [duration, setDuration] = useState(0);
   const [commenting, setCommenting] = useState(false);
@@ -152,8 +155,6 @@ export default function FeedbackClientPlayer({ leadId, reviewerId, url }: { lead
       </div>
       
       <div className="w-full h-full relative z-10 pointer-events-auto">
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        {/* @ts-expect-error third party missing types */}
         <Player
           ref={playerRef}
           url={parsedUrl}

@@ -641,7 +641,14 @@ export default function ClientPortal() {
                   <Video size={16} /> Secure File Drop
                 </h4>
                 <p className="text-xs text-white/60 mb-4">Upload source files matching your brand (Logos, LUTS, Fonts, Footages).</p>
-                <FileUploader leadId={leadId!} onUploadComplete={() => { toast.success("Assets Synced to Editor Dashboard") }} folder="client_uploads" />
+                <FileUploader leadId={leadId!} existingFiles={lead.uploadedAssets || []} onUploadComplete={async (files) => { 
+                   try {
+                     await updateDoc(doc(db, 'leads', leadId!), { uploadedAssets: files });
+                     toast.success("Assets Synced to Editor Dashboard");
+                   } catch (err) {
+                     toast.error("Failed to sync assets");
+                   }
+                }} folder="client_uploads" />
              </div>
           </motion.div>
         )}
@@ -665,7 +672,7 @@ export default function ClientPortal() {
                       </div>
                    )}
                    {(lead.tasks?.v1_sent || lead.tasks?.final_exported) ? (
-                       <FeedbackClientPlayer leadId={lead.id} reviewerId={lead.ownerId} url={lead.reviewVideoUrl} />
+                       <FeedbackClientPlayer leadId={lead.id} reviewerId={lead.ownerId} url={lead.reviewVideoUrl} uploadedAssets={lead.uploadedAssets || []} />
                    ) : (
                      <div className="text-zinc-600 text-[10px] uppercase font-mono tracking-[0.2em] flex flex-col items-center gap-3 relative z-20">
                        <Clock size={20} className="text-zinc-700" />

@@ -132,42 +132,57 @@ export default function GodModeBackgroundWorker() {
       const autopilotOn = localStorage.getItem('autopilotOn') === 'true';
       if (!autopilotOn) return;
 
-      const lastRun = localStorage.getItem('autopilotLastRunDate');
-      const today = new Date().toISOString().split('T')[0];
-      if (lastRun === today) return; // already ran today
+      const lastRunStr = localStorage.getItem('autopilotLastRunTimestamp');
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      // Run once a day after 6 AM
+      if (currentHour < 6) return;
+      if (lastRunStr) {
+         const lastRunDate = new Date(parseInt(lastRunStr));
+         if (lastRunDate.toDateString() === now.toDateString()) {
+             // Already ran today
+             return;
+         }
+      }
 
-      console.log("Triggering daily June Prime in the background...");
-      toast("🤖 June Prime started daily scan in background...");
-      localStorage.setItem('autopilotLastRunDate', today); // Optimistically set so we don't double fire
+      console.log("Triggering June Prime morning background worker...");
+      toast("🤖 June Prime starting 6 AM daily scan...");
+      // Mark as ran today immediately to avoid parallel runs
+      localStorage.setItem('autopilotLastRunTimestamp', Date.now().toString()); 
 
       try {
         const autopilotNiche = localStorage.getItem('autopilotNiche') || 'OVERALL';
         let targetNiche = autopilotNiche === 'OVERALL' ? 'OVERALL' : autopilotNiche;
-        const isSunday = new Date().getDay() === 0;
+        const isSunday = now.getDay() === 0;
 
-        if (targetNiche === 'OVERALL' && !isSunday) {
+        if (isSunday) {
+          targetNiche = 'OVERALL';
+          toast("🤖 June Prime Sunday Global Scan initiated: Hunting for editor jobs...");
+        } else if (targetNiche === 'OVERALL') {
           const YOUTUBE_NICHES = [
-            "VTubers & Virtual Idols", "Gaming & Esports", "Finance & Stocks", "Real Estate Investing", "Podcast & Multi-Cam"
+            "VTubers & Virtual Idols", "Gaming & Esports", "Finance & Stocks", "Real Estate Investing", "Podcast & Multi-Cam",
+            "Cooking & Baking", "Mukbang & Eating Shows", "Tech & Gadget Reviews", "Edutainment & Lore", "Video Essays & Mini-Docs",
+            "Faceless Channels", "Reaction & Commentary", "Esports & Competitive Gaming", "Science Experiments", "Documentary Films",
+            "Productivity & Self-Help", "Men's Fashion & Grooming", "Streetwear & Sneakers", "Fitness & Bodybuilding", "Travel Vlogs & Exploration",
+            "Van Life & Digital Nomads", "Theme Park Reviews", "Photography & Filmmaking", "Automotive & Car Builds"
           ];
           targetNiche = YOUTUBE_NICHES[Math.floor(Math.random() * YOUTUBE_NICHES.length)];
           toast(`🤖 June Prime targeting high-value leaders in ${targetNiche}...`);
-        } else if (targetNiche === 'OVERALL' && isSunday) {
-          toast("🤖 June Prime Sunday Global Scan initiated...");
         }
 
         const { generateBulkChannelLeads, generateInstantColdPitch, generateSingleLeadAnalysis } = await import('../services/ai');
-        const channels = await generateBulkChannelLeads(targetNiche, 10, 5000, "Global");
+        // Reduce minSubs to 1000 so we catch smaller, hungry channels needing editors
+        const channels = await generateBulkChannelLeads(targetNiche, 20, 1000, "Global");
         
         const eliteChannels = channels.filter(c => {
-           if (isSunday && targetNiche === 'OVERALL') {
-              return c.leadScore?.includes('A') || c.leadScore?.includes('B') || c.leadScore?.includes('C');
-           } else {
-              return c.leadScore?.includes('A') || c.leadScore?.includes('B');
-           }
-        }).slice(0, 15);
+           return c.leadScore?.includes('A') || c.leadScore?.includes('B');
+        }).slice(0, 10);
         
         if (eliteChannels.length === 0) {
-          toast.info("🤖 June Prime finished: No elite leads found today.");
+          toast.info("🤖 June Prime finished: No new leads passed the filter.");
+          // Clear timestamp to retry since we failed to find leads today
+          localStorage.removeItem('autopilotLastRunTimestamp');
           return;
         }
 
@@ -177,7 +192,15 @@ export default function GodModeBackgroundWorker() {
                 const brandName = item.channelName || 'Unknown Brand';
                 const existingQuery = query(collection(db, 'leads'), where('ownerId', '==', user.uid), where('brandName', '==', brandName));
                 const existingDocs = await getDocs(existingQuery);
-                if (!existingDocs.empty) continue;
+                let isDuplicate = !existingDocs.empty;
+                
+                if (!isDuplicate && item.channelUrl) {
+                    const urlQuery = query(collection(db, 'leads'), where('ownerId', '==', user.uid), where('companyUrl', '==', item.channelUrl));
+                    const urlDocs = await getDocs(urlQuery);
+                    isDuplicate = !urlDocs.empty;
+                }
+                
+                if (isDuplicate) continue;
 
                 const analysis = await generateSingleLeadAnalysis(item);
                 const pitchData = await generateInstantColdPitch({ ...item, ...analysis });
@@ -232,17 +255,38 @@ export default function GodModeBackgroundWorker() {
            try {
              console.log(`JunePrime background enriching: ${lead.brandName}`);
              const { enrichLeadSocials } = await import('../services/ai');
-             const enrichment = await enrichLeadSocials(lead.companyUrl);
+             const enrichment = await enrichLeadSocials(lead);
              
-             await updateDoc(docSnap.ref, {
-               socialsEnriched: true,
-               enrichedData: enrichment,
-               scoreContext: `JunePrime Auto-Enrichment applied.`
-             });
-             toast.success(`JunePrime enriched lead intelligence for ${lead.brandName}`);
-           } catch (e) {
+             if (enrichment) {
+               try {
+                 await updateDoc(docSnap.ref, {
+                   socialsEnriched: true,
+                   enrichedData: enrichment,
+                   scoreContext: `JunePrime Auto-Enrichment applied.`,
+                   updatedAt: serverTimestamp()
+                 });
+                 toast.success(`JunePrime enriched lead intelligence for ${lead.brandName}`);
+               } catch (updateErr) {
+                 console.error("Failed to update lead with enrichment data:", updateErr);
+               }
+             } else {
+               try {
+                 await updateDoc(docSnap.ref, { enrichmentFailed: true, updatedAt: serverTimestamp() });
+               } catch (updateErr) {
+                 console.error("Failed to mark lead as enrichment failed:", updateErr);
+               }
+             }
+           } catch (e: any) {
+             if (e?.status === 'RESOURCE_EXHAUSTED' || e?.message?.includes('429')) {
+               console.warn('Enrichment agent hit rate limit. Halting queue.');
+               break; // Stop processing further leads in this interval
+             }
              console.error('Enrichment agent failed:', e);
-             await updateDoc(docSnap.ref, { enrichmentFailed: true });
+             try {
+               await updateDoc(docSnap.ref, { enrichmentFailed: true, updatedAt: serverTimestamp() });
+             } catch (updateErr) {
+               console.error("Failed to mark lead as enrichment failed in catch block:", updateErr);
+             }
            }
         }
       } catch (e) {
