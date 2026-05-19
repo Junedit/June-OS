@@ -39,6 +39,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: 'dashboard', label: 'Lead Database', icon: LayoutDashboard },
     { id: 'agents', label: 'AI War Room', icon: Bot },
     { id: 'projects', label: 'Active Projects', icon: PlayCircle },
+    { id: 'scripts', label: 'AI Scripts', icon: FileText },
     { id: 'prospector', label: 'Prospector', icon: Telescope },
     { id: 'outreach', label: 'Outreach', icon: Mail },
     { id: 'analytics', label: 'Deep Analytics', icon: Activity },

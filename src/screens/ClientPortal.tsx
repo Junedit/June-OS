@@ -38,6 +38,19 @@ export default function ClientPortal() {
   const searchParams = new URLSearchParams(window.location.search);
   const leadId = searchParams.get('id');
   const proposalId = searchParams.get('proposal');
+  const token = searchParams.get('token');
+
+  useEffect(() => {
+    if (token && leadId) {
+       fetch(`/api/verify-magic-link/${token}`)
+         .then(res => res.json())
+         .then(data => {
+            if (data.clientId === leadId) {
+               setIsAuthenticated(true);
+            }
+         }).catch(console.error);
+    }
+  }, [token, leadId]);
 
   useEffect(() => {
     if (proposalId) {
@@ -475,28 +488,28 @@ export default function ClientPortal() {
         {/* Status Card and Deliverables Grid */}
         
         {/* TABS HEADER */}
-        <div className="flex space-x-6 border-b border-white/[0.04] mb-10 overflow-x-auto custom-scrollbar">
+        <div className="flex flex-wrap gap-2 mb-10 overflow-x-auto custom-scrollbar bg-[#0a0a0a] p-2 rounded-[24px] border border-white/[0.04]">
           <button 
             onClick={() => setActiveTab('overview')}
-            className={`pb-4 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-colors border-b-2 ${activeTab === 'overview' ? 'text-[var(--brand-primary)] border-[var(--brand-primary)]' : 'text-zinc-600 border-transparent hover:text-white'}`}
+            className={`px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-all rounded-[16px] ${activeTab === 'overview' ? 'bg-[var(--brand-primary)] text-black shadow-[0_4px_20px_rgba(0,239,209,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
           >
             Overview & Status
           </button>
           <button 
             onClick={() => setActiveTab('onboarding')}
-            className={`pb-4 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-colors border-b-2 ${activeTab === 'onboarding' ? 'text-[var(--brand-primary)] border-[var(--brand-primary)]' : 'text-zinc-600 border-transparent hover:text-white'}`}
+            className={`px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-all rounded-[16px] ${activeTab === 'onboarding' ? 'bg-[var(--brand-primary)] text-black shadow-[0_4px_20px_rgba(0,239,209,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
           >
             Brand Onboarding
           </button>
           <button 
             onClick={() => setActiveTab('deliverables')}
-            className={`pb-4 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-colors border-b-2 ${activeTab === 'deliverables' ? 'text-[var(--brand-primary)] border-[var(--brand-primary)]' : 'text-zinc-600 border-transparent hover:text-white'}`}
+            className={`px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-all rounded-[16px] ${activeTab === 'deliverables' ? 'bg-[var(--brand-primary)] text-black shadow-[0_4px_20px_rgba(0,239,209,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
           >
             Deliverables & Feedback
           </button>
           <button 
             onClick={() => setActiveTab('roi')}
-            className={`pb-4 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-colors border-b-2 ${activeTab === 'roi' ? 'text-[var(--brand-primary)] border-[var(--brand-primary)]' : 'text-zinc-600 border-transparent hover:text-white'}`}
+            className={`px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-all rounded-[16px] ${activeTab === 'roi' ? 'bg-[var(--brand-primary)] text-black shadow-[0_4px_20px_rgba(0,239,209,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
           >
             Impact & ROI
           </button>
@@ -509,7 +522,7 @@ export default function ClientPortal() {
              initial={{ opacity: 0, x: -20 }}
              animate={{ opacity: 1, x: 0 }}
              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-             className="bg-[#000000] border border-white/[0.04] backdrop-blur-2xl rounded-sm p-10 shadow-2xl h-full"
+             className="bg-gradient-to-br from-[#111] to-[#050505] border border-white/[0.08] backdrop-blur-2xl rounded-[32px] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] h-full"
            >
             <div className="flex justify-between items-end mb-6 border-b border-white/[0.04] pb-6">
               <div>
@@ -572,37 +585,37 @@ export default function ClientPortal() {
             <div className="mt-8 pt-6 border-t border-white/[0.04] space-y-4">
                <h3 className="text-xs font-body tracking-tight tracking-[0.2em] uppercase text-white">Project Assets</h3>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div className="flex flex-col gap-3 p-4 bg-[#000000]/40 rounded-sm border border-white/[0.04]">
+                 <div className="flex flex-col gap-3 p-5 bg-[#0a0a0a] rounded-[24px] border border-white/[0.04]">
                     <div className="flex items-center gap-2 text-white/60 mb-1">
                       <Video size={16} />
                       <span className="text-xs font-mono uppercase tracking-[0.2em]">Raw Footage</span>
                     </div>
                     {lead.rawFootageUrl ? (
-                      <a href={lead.rawFootageUrl} target="_blank" rel="noreferrer" className="bg-white/10 text-zinc-100 hover:bg-[var(--brand-primary)] text-white hover:text-black transition-colors rounded-sm py-2 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04]">
+                      <a href={lead.rawFootageUrl} target="_blank" rel="noreferrer" className="bg-white/10 text-zinc-100 hover:bg-[var(--brand-primary)] text-white hover:text-black transition-colors rounded-[16px] py-3 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04]">
                         Access Drive/Folder
                       </a>
                     ) : (
-                      <div className="bg-[#000000] text-zinc-600 rounded-sm py-2 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04] cursor-not-allowed">
+                      <div className="bg-[#000000] text-zinc-600 rounded-[16px] py-3 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04] cursor-not-allowed">
                         Awaiting Upload
                       </div>
                     )}
                  </div>
                  
-                 <div className="flex flex-col gap-3 p-4 bg-[#000000]/40 rounded-sm border border-white/[0.04]">
+                 <div className="flex flex-col gap-3 p-5 bg-[#0a0a0a] rounded-[24px] border border-white/[0.04]">
                     <div className="flex items-center gap-2 text-white/60 mb-1">
                       <Download size={16} />
                       <span className="text-xs font-mono uppercase tracking-[0.2em]">Final Delivery</span>
                     </div>
                     {lead.masterFileUrl ? (
-                      <a href={lead.masterFileUrl} target="_blank" rel="noreferrer" className="bg-white/10 text-white/80 hover:bg-[var(--brand-primary)] hover:text-white transition-colors rounded-sm py-2 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04] flex items-center justify-center gap-2">
+                      <a href={lead.masterFileUrl} target="_blank" rel="noreferrer" className="bg-white/10 text-white/80 hover:bg-[var(--brand-primary)] hover:text-black transition-colors rounded-[16px] py-3 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04] flex items-center justify-center gap-2">
                         <Download size={14}/> Download Master
                       </a>
                     ) : lead.projectFilesUrl ? (
-                       <a href={lead.projectFilesUrl} target="_blank" rel="noreferrer" className="bg-[#141414] hover:bg-zinc-700 text-white transition-colors rounded-sm py-2 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.06]">
+                       <a href={lead.projectFilesUrl} target="_blank" rel="noreferrer" className="bg-[#141414] hover:bg-zinc-700 text-white transition-colors rounded-[16px] py-3 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.06]">
                         Project Files Available
                       </a>
                     ) : (
-                      <div className="bg-[#000000] text-zinc-600 rounded-sm py-2 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04] cursor-not-allowed">
+                      <div className="bg-[#000000] text-zinc-600 rounded-[16px] py-3 px-4 text-xs font-bold uppercase tracking-[0.2em] text-center border border-white/[0.04] cursor-not-allowed">
                         Awaiting Export
                       </div>
                     )}
@@ -614,19 +627,19 @@ export default function ClientPortal() {
         )}
 
         {activeTab === 'onboarding' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-[#000000] border border-white/[0.04] backdrop-blur-2xl rounded-sm p-10 shadow-2xl h-full flex flex-col gap-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-[#000000] border border-white/[0.04] backdrop-blur-2xl rounded-[32px] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] h-full flex flex-col gap-6">
              <div>
                 <h3 className="text-xl font-light tracking-tight text-white mb-1">Brand Assets & Questionnaires</h3>
                 <p className="text-sm text-white/60">Upload your raw files, logos, guidelines, and answer onboarding questions.</p>
              </div>
              
-             <div className="bg-[#0f0f0f] border border-white/[0.04] p-6 rounded-sm">
+             <div className="bg-[#0a0a0a] border border-white/[0.04] p-8 rounded-[24px]">
                 <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-widest flex items-center gap-2">
                   <FileSignature size={16} /> Strategy Questionnaire
                 </h4>
-                <p className="text-xs text-white/60 mb-4">Let's dial in the brand voice before editing begins.</p>
+                <p className="text-xs text-white/60 mb-6">Let's dial in the brand voice before editing begins.</p>
                 <textarea 
-                  className="w-full bg-[#000000] border border-white/[0.04] p-4 text-sm text-white focus:outline-none placeholder-white/30 h-32 rounded-sm custom-scrollbar"
+                  className="w-full bg-[#000000] border border-white/[0.08] p-5 text-sm text-white focus:outline-none focus:border-[var(--brand-primary)] transition-colors placeholder-white/30 h-40 rounded-[16px] custom-scrollbar"
                   placeholder="Drop answers to the onboarding questions here..."
                   defaultValue={lead.questionnaireAnswers || ''}
                   onBlur={async (e) => {
@@ -636,35 +649,37 @@ export default function ClientPortal() {
                 />
              </div>
 
-             <div className="bg-[#0f0f0f] border border-white/[0.04] p-6 rounded-sm">
+             <div className="bg-[#0a0a0a] border border-white/[0.04] p-8 rounded-[24px]">
                 <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-widest flex items-center gap-2">
                   <Video size={16} /> Secure File Drop
                 </h4>
-                <p className="text-xs text-white/60 mb-4">Upload source files matching your brand (Logos, LUTS, Fonts, Footages).</p>
-                <FileUploader leadId={leadId!} existingFiles={lead.uploadedAssets || []} onUploadComplete={async (files) => { 
-                   try {
-                     await updateDoc(doc(db, 'leads', leadId!), { uploadedAssets: files });
-                     toast.success("Assets Synced to Editor Dashboard");
-                   } catch (err) {
-                     toast.error("Failed to sync assets");
-                   }
-                }} folder="client_uploads" />
+                <p className="text-xs text-white/60 mb-6">Upload source files matching your brand (Logos, LUTS, Fonts, Footages).</p>
+                <div className="rounded-[16px] overflow-hidden border border-white/[0.08]">
+                   <FileUploader leadId={leadId!} existingFiles={lead.uploadedAssets || []} onUploadComplete={async (files) => { 
+                      try {
+                        await updateDoc(doc(db, 'leads', leadId!), { uploadedAssets: files });
+                        toast.success("Assets Synced to Editor Dashboard");
+                      } catch (err) {
+                        toast.error("Failed to sync assets");
+                      }
+                   }} folder="client_uploads" />
+                </div>
              </div>
           </motion.div>
         )}
 
         {activeTab === 'deliverables' && (
            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col gap-6">
-              <div className="bg-[#0f0f0f] border border-white/[0.04] backdrop-blur-2xl rounded-sm p-10 shadow-2xl flex flex-col min-h-[600px] h-full">
+              <div className="bg-[#000000] border border-white/[0.04] backdrop-blur-2xl rounded-[32px] p-8 md:p-10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col min-h-[600px] h-full">
                 <div className="flex justify-between items-center mb-6">
                    <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60">Frame Canvas Review</h3>
                    {(lead.tasks?.v1_sent || lead.tasks?.final_exported) && (
-                      <span className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-100 bg-white/5 px-2 py-1 rounded-sm border border-white/[0.04] uppercase tracking-[0.2em]"><Video size={10}/> Frame Active</span>
+                      <span className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--brand-primary)] bg-[var(--brand-primary)]/10 px-3 py-1.5 rounded-full border border-[var(--brand-primary)]/20 uppercase tracking-[0.2em]"><Video size={10}/> Frame Active</span>
                    )}
                 </div>
 
                 {/* Video Player */}
-                <div className="w-full aspect-video bg-[#000000] border border-white/[0.04] rounded-sm relative overflow-hidden mb-6 flex-shrink-0 flex items-center justify-center">
+                <div className="w-full aspect-video bg-[#050505] border border-white/[0.08] rounded-[24px] relative overflow-hidden mb-6 flex-shrink-0 flex items-center justify-center shadow-inner">
                    {(!lead.tasks?.v1_sent && !lead.tasks?.final_exported) && (
                       <div className="absolute inset-0 bg-white/5 flex flex-col items-center justify-center animate-pulse z-10">
                          <Loader2 size={24} className="text-zinc-600 animate-spin mb-2" />
@@ -699,41 +714,43 @@ export default function ClientPortal() {
                 )}
 
                 {/* Feedback Chat */}
-                <div className="flex-1 flex flex-col min-h-0 bg-[#000000]/50 border border-white/[0.04] p-4 rounded-sm">
-                   <div className="flex-1 overflow-y-auto mb-4 space-y-3 custom-scrollbar pr-2 min-h-[200px]">
+                <div className="flex-1 flex flex-col min-h-0 bg-[#0a0a0a] border border-white/[0.04] p-6 rounded-[24px]">
+                   <div className="flex-1 overflow-y-auto mb-4 space-y-4 custom-scrollbar pr-2 min-h-[200px]">
                      {(!lead.feedback || lead.feedback.length === 0) && (
                        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-600 text-center italic mt-4">No comm logs generated.</p>
                      )}
                      {lead.feedback?.map((fb: any, idx: number) => (
-                        <div key={idx} className={`flex ${fb.type === 'client' ? 'justify-end' : 'justify-start'}`}>
-                           <div className={`max-w-[85%] p-3 rounded-sm text-sm font-light ${fb.type === 'client' ? 'bg-[#111111] border border-white/[0.04] text-white' : 'bg-[#1a1a1a] border border-[var(--brand-primary)]/20 text-white/80'}`}>
-                             <div className="flex items-center gap-2 mb-1">
-                               {fb.timestampPin && <span className="text-[10px] font-mono text-zinc-100 bg-white/10 px-1 py-0.5 rounded-sm">@{fb.timestampPin}</span>}
-                               {fb.sentiment === 'Praise' && <Sparkles size={10} className="text-white/80"/>}
-                               {fb.sentiment === 'Revision' && <Clock size={10} className="text-white/80"/>}
+                        <div key={idx} className={`flex w-full ${fb.type === 'client' ? 'justify-end' : 'justify-start'}`}>
+                           <div className={`max-w-[75%] p-4 text-sm font-light shadow-sm ${fb.type === 'client' ? 'bg-[var(--brand-primary)] text-black rounded-[20px] rounded-br-sm' : 'bg-[#141414] border border-white/[0.04] text-white/90 rounded-[20px] rounded-bl-sm'}`}>
+                             <div className="flex items-center gap-2 mb-1.5 opacity-60">
+                               {fb.timestampPin && <span className="text-[10px] font-mono bg-black/10 px-1.5 py-0.5 rounded-sm">@{fb.timestampPin}</span>}
+                               {fb.sentiment === 'Praise' && <Sparkles size={12}/>}
+                               {fb.sentiment === 'Revision' && <Clock size={12}/>}
                              </div>
-                             <p>{fb.text}</p>
+                             <p className="leading-relaxed">{fb.text}</p>
                            </div>
                         </div>
                      ))}
                    </div>
                    
-                   <div className="relative mt-auto shrink-0">
+                   <div className="relative mt-auto shrink-0 bg-[#050505] rounded-[16px] border border-white/[0.04] p-2 focus-within:border-[var(--brand-primary)]/50 transition-colors">
                      <textarea 
                        value={feedbackText}
                        onChange={e => setFeedbackText(e.target.value)}
                        placeholder={(lead.tasks?.v1_sent || lead.tasks?.final_exported) ? "Request revision or give feedback..." : "Awaiting assets..."}
                        disabled={!(lead.tasks?.v1_sent || lead.tasks?.final_exported) || submittingFeedback}
-                       className="w-full bg-[#000000] border border-white/[0.04] p-4 pt-3 pb-12 rounded-sm text-sm font-light text-white focus:outline-none focus:border-zinc-600 resize-none transition-colors"
+                       className="w-full bg-transparent p-3 pb-10 text-sm font-light text-white focus:outline-none resize-none"
                        rows={2}
                      />
-                     <button 
-                       onClick={handleFeedbackSubmit}
-                       disabled={!feedbackText.trim() || submittingFeedback}
-                       className="absolute bottom-3 right-3 p-2 bg-[var(--brand-primary)] text-white hover:scale-110 transition-all rounded-sm"
-                     >
-                       {submittingFeedback ? <Loader2 size={14} className="animate-spin" /> : <MessageSquare size={14} />}
-                     </button>
+                     <div className="absolute flex justify-end bottom-3 right-3 left-3">
+                         <button 
+                           onClick={handleFeedbackSubmit}
+                           disabled={!feedbackText.trim() || submittingFeedback}
+                           className="p-2.5 bg-[var(--brand-primary)] text-black hover:bg-white transition-all rounded-full disabled:opacity-50 disabled:hover:bg-[var(--brand-primary)]"
+                         >
+                           {submittingFeedback ? <Loader2 size={16} className="animate-spin" /> : <MessageSquare size={16} />}
+                         </button>
+                     </div>
                    </div>
                 </div>
               </div>
@@ -742,36 +759,38 @@ export default function ClientPortal() {
         
         {activeTab === 'roi' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6">
-             <div className="bg-[#0f0f0f] border border-white/[0.04] backdrop-blur-2xl rounded-sm p-10 shadow-2xl flex flex-col items-center justify-center text-center">
+             <div className="bg-[#000000] border border-white/[0.04] backdrop-blur-2xl rounded-[32px] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col items-center justify-center text-center">
                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                    <TrendingUp size={32} className="text-white" />
+                    <TrendingUp size={32} className="text-[var(--brand-primary)]" />
                  </div>
-                 <h2 className="text-2xl font-bold font-body tracking-tight text-white mb-2">Editor Impact & ROI</h2>
+                 <h2 className="text-3xl font-bold font-body tracking-tight text-white mb-2">Editor Impact & ROI</h2>
                  <p className="text-white/60 text-sm max-w-lg mb-10">We don't just deliver videos; we generate assets that perform. Here is the aggregate performance impact of the content we've delivered for you.</p>
 
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-                    <div className="bg-[#000000] border border-white/[0.04] p-8 rounded-sm">
+                    <div className="bg-[#0a0a0a] border border-white/[0.04] p-8 rounded-[24px]">
                        <Calculator size={20} className="text-zinc-500 mb-4 mx-auto" />
                        <h3 className="text-[10px] font-mono tracking-[0.2em] uppercase text-white/50 mb-2">Total Views Generated</h3>
                        <p className="text-3xl font-bold font-body tracking-tight text-white">1.2M<span className="text-lg text-white/40">+</span></p>
                     </div>
-                    <div className="bg-[#000000] border border-white/[0.04] p-8 rounded-sm relative overflow-hidden">
+                    <div className="bg-[#0a0a0a] border border-[var(--brand-primary)]/20 p-8 rounded-[24px] relative overflow-hidden shadow-[0_0_40px_rgba(0,239,209,0.1)]">
                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--brand-primary)]/10 to-transparent"></div>
                        <Clock size={20} className="text-[var(--brand-primary)] mb-4 mx-auto relative z-10" />
                        <h3 className="text-[10px] font-mono tracking-[0.2em] uppercase text-white/50 mb-2 relative z-10">Avg. Retention Rate</h3>
                        <p className="text-3xl font-bold font-body tracking-tight text-white relative z-10">63%</p>
                     </div>
-                    <div className="bg-[#000000] border border-white/[0.04] p-8 rounded-sm">
+                    <div className="bg-[#0a0a0a] border border-white/[0.04] p-8 rounded-[24px]">
                        <DollarSign size={20} className="text-emerald-500 mb-4 mx-auto" />
                        <h3 className="text-[10px] font-mono tracking-[0.2em] uppercase text-white/50 mb-2">Est. Adsense/Sponsor ROI</h3>
                        <p className="text-3xl font-bold font-body tracking-tight text-emerald-400">+$4,500</p>
                     </div>
                  </div>
 
-                 <div className="w-full mt-10 text-left bg-white/5 p-8 rounded-sm border border-white/[0.04]">
-                    <h3 className="text-lg font-bold font-body tracking-tight text-white mb-2">Want to scale this up?</h3>
-                    <p className="text-sm text-white/60 mb-6">These numbers prove the model works. Secure our weekly editing retainer so we can reliably scale your channel without skipping a beat.</p>
-                    <button onClick={() => window.open('https://buy.stripe.com/test_demo', '_blank')} className="bg-[var(--brand-primary)] text-black font-bold uppercase tracking-[0.2em] text-[10px] px-6 py-3 rounded-sm transition-colors hover:bg-white flex items-center justify-center gap-2">
+                 <div className="w-full mt-10 text-left bg-[#0a0a0a] p-8 rounded-[24px] border border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                      <h3 className="text-xl font-bold font-body tracking-tight text-white mb-2">Want to scale this up?</h3>
+                      <p className="text-sm text-white/60">These numbers prove the model works. Secure our weekly editing retainer so we can reliably scale your channel without skipping a beat.</p>
+                    </div>
+                    <button onClick={() => window.open('https://buy.stripe.com/test_demo', '_blank')} className="bg-[var(--brand-primary)] text-black font-bold uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full transition-colors hover:bg-white flex items-center justify-center gap-2 whitespace-nowrap shadow-[0_4px_20px_rgba(0,239,209,0.3)] shrink-0">
                        <CreditCard size={14} /> View Retainer Options
                     </button>
                  </div>
@@ -903,48 +922,48 @@ function ROICalculator() {
   const totalRevenue = Math.round((newViews / 1000) * estimatedCPM);
 
   return (
-    <div className="flex flex-col md:flex-row gap-10 mt-4">
+    <div className="flex flex-col md:flex-row gap-8 mt-6">
       {/* Controls */}
-      <div className="flex-1 space-y-5 bg-white/5 p-4 rounded-2xl border border-white/[0.02]">
+      <div className="flex-1 space-y-6 bg-[#0a0a0a] p-8 rounded-[24px] border border-white/[0.04]">
         <div>
-           <div className="flex justify-between items-end mb-2">
+           <div className="flex justify-between items-end mb-3">
              <label className="text-xs text-white/60 font-bold uppercase tracking-widest">Target AVD Increase (%)</label>
-             <span className="font-mono text-white/80 font-bold text-sm">+{targetAVDIncrease}%</span>
+             <span className="font-mono text-white/80 font-bold text-sm bg-white/5 py-1 px-3 rounded-md">+{targetAVDIncrease}%</span>
            </div>
-           <input type="range" min="1" max="50" step="1" value={targetAVDIncrease} onChange={(e) => setTargetAVDIncrease(Number(e.target.value))} className="w-full h-1 bg-[#141414] rounded-2xl appearance-none cursor-pointer accent-emerald-500" />
+           <input type="range" min="1" max="50" step="1" value={targetAVDIncrease} onChange={(e) => setTargetAVDIncrease(Number(e.target.value))} className="w-full h-2 bg-[#141414] rounded-full appearance-none cursor-pointer accent-[var(--brand-primary)]" />
         </div>
         <div>
-           <div className="flex justify-between items-end mb-2">
+           <div className="flex justify-between items-end mb-3">
              <label className="text-xs text-white/60 font-bold uppercase tracking-widest">Current Views / Video</label>
-             <span className="font-mono text-white font-bold text-sm">{currentViews.toLocaleString()}</span>
+             <span className="font-mono text-white font-bold text-sm bg-white/5 py-1 px-3 rounded-md">{currentViews.toLocaleString()}</span>
            </div>
-           <input type="range" min="10000" max="2500000" step="10000" value={currentViews} onChange={(e) => setCurrentViews(Number(e.target.value))} className="w-full h-1 bg-[#141414] rounded-2xl appearance-none cursor-pointer accent-white" />
+           <input type="range" min="10000" max="2500000" step="10000" value={currentViews} onChange={(e) => setCurrentViews(Number(e.target.value))} className="w-full h-2 bg-[#141414] rounded-full appearance-none cursor-pointer accent-white" />
         </div>
         <div>
-           <div className="flex justify-between items-end mb-2">
+           <div className="flex justify-between items-end mb-3">
              <label className="text-xs text-white/60 font-bold uppercase tracking-widest">Est. CPM ($)</label>
-             <span className="font-mono text-white font-bold text-sm">${estimatedCPM.toFixed(2)}</span>
+             <span className="font-mono text-white font-bold text-sm bg-white/5 py-1 px-3 rounded-md">${estimatedCPM.toFixed(2)}</span>
            </div>
-           <input type="range" min="1" max="15" step="0.5" value={estimatedCPM} onChange={(e) => setEstimatedCPM(Number(e.target.value))} className="w-full h-1 bg-[#141414] rounded-2xl appearance-none cursor-pointer accent-white" />
+           <input type="range" min="1" max="15" step="0.5" value={estimatedCPM} onChange={(e) => setEstimatedCPM(Number(e.target.value))} className="w-full h-2 bg-[#141414] rounded-full appearance-none cursor-pointer accent-white" />
         </div>
       </div>
 
       {/* Output */}
-      <div className="flex-1 bg-white/10 border border-white/[0.04] rounded-2xl p-10 flex flex-col justify-center">
-         <div className="flex justify-between items-center mb-6 border-b border-white/[0.04] pb-4">
+      <div className="flex-1 bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[var(--brand-primary)]/20 rounded-[24px] p-10 flex flex-col justify-center shadow-[0_0_40px_rgba(0,239,209,0.05)]">
+         <div className="flex justify-between items-center mb-8 border-b border-white/[0.04] pb-6">
             <div>
                <p className="text-xs text-white/80/70 uppercase tracking-[0.2em] font-bold">New Projected Views</p>
-               <p className="text-2xl font-mono text-white mt-1">{newViews.toLocaleString()}</p>
+               <p className="text-3xl font-mono text-white mt-2">{newViews.toLocaleString()}</p>
             </div>
             <div className="text-right">
                <p className="text-xs text-white/80/70 uppercase tracking-[0.2em] font-bold">Total Revenue</p>
-               <p className="text-2xl font-mono text-white/80 mt-1">${totalRevenue.toLocaleString()}</p>
+               <p className="text-3xl font-mono text-white/80 mt-2">${totalRevenue.toLocaleString()}</p>
             </div>
          </div>
          <div className="text-center">
-            <p className="text-sm text-white/60 mb-1">Direct Value Generated per Video</p>
-            <div className="text-4xl font-body tracking-tight font-black text-white/80">
-              <span className="text-white/80/50">+</span>${revenueIncrease.toLocaleString()}
+            <p className="text-xs font-bold tracking-widest uppercase text-white/50 mb-3">Direct Value Generated per Video</p>
+            <div className="text-5xl font-body tracking-tight font-black text-white/90">
+              <span className="text-[var(--brand-primary)]/80 mr-1">+</span>${revenueIncrease.toLocaleString()}
             </div>
          </div>
       </div>

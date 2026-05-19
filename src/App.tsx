@@ -11,6 +11,7 @@ import Proposals from './screens/Proposals';
 import Contracts from './screens/Contracts';
 import AssetsHub from './screens/AssetsHub';
 import AIAgents from './screens/AIAgents';
+import ScriptWriter from './screens/ScriptWriter';
 import { Toaster, toast } from 'sonner';
 import { useAuth } from './contexts/AuthContext';
 import { Key, Command, Hexagon } from 'lucide-react';
@@ -18,13 +19,45 @@ import { motion, AnimatePresence } from 'motion/react';
 import HomeHUD from './screens/HomeHUD';
 import CommandPalette from './components/CommandPalette';
 import ActivityTicker from './components/ActivityTicker';
+import NotificationCenter from './components/NotificationCenter';
 import { addGlobalActivity } from './services/activity';
 import { seedPommerLead } from './seedPommer';
 
 // Monkey-patch toast.success to also log to our genuine activity history
+const playToastSound = (isError = false) => {
+  try {
+    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    // Smooth chime sound
+    osc.type = isError ? 'triangle' : 'sine';
+    
+    if (isError) {
+       osc.frequency.setValueAtTime(300, context.currentTime);
+       osc.frequency.exponentialRampToValueAtTime(200, context.currentTime + 0.2);
+    } else {
+       osc.frequency.setValueAtTime(800, context.currentTime);
+       osc.frequency.exponentialRampToValueAtTime(1200, context.currentTime + 0.1);
+    }
+    
+    gainNode.gain.setValueAtTime(0, context.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.15, context.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.4);
+    
+    osc.connect(gainNode);
+    gainNode.connect(context.destination);
+    osc.start();
+    osc.stop(context.currentTime + 0.4);
+  } catch (e) {
+    console.error("Audio playback blocked", e);
+  }
+};
+
 if (!(toast as any).__patched) {
   const originalToastSuccess = toast.success;
   toast.success = ((message: string | React.ReactNode, data?: any) => {
+    playToastSound(false);
     if (typeof message === 'string') {
       let type: 'system' | 'ai' | 'deal' | 'payment' = 'system';
       if (message.toLowerCase().includes('invoice') || message.toLowerCase().includes('paid')) type = 'payment';
@@ -37,6 +70,7 @@ if (!(toast as any).__patched) {
   }) as any;
   const originalToastError = toast.error;
   toast.error = ((message: string | React.ReactNode, data?: any) => {
+    playToastSound(true);
     return originalToastError(message as any, { duration: 3000, ...data });
   }) as any;
   (toast as any).__patched = true;
@@ -58,6 +92,8 @@ import Outreach from './screens/Outreach';
 
 import CyberBackground from './components/CyberBackground';
 
+import MarketingLanding from './screens/MarketingLanding';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('home'); // Start on dashboard/leads
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -65,7 +101,7 @@ export default function App() {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'landing'>('landing');
   const [authError, setAuthError] = useState('');
   
   useEffect(() => {
@@ -80,7 +116,7 @@ export default function App() {
     return <ClientPortal />;
   }
   if (searchParams.get('mode') === 'contract') {
-    return <PublicContractView contractId={searchParams.get('id')} />;
+    return <PublicContractView contractId={searchParams.get('id')} token={searchParams.get('token')} />;
   }
   if (searchParams.get('mode') === 'proposal') {
     return <PublicProposalView proposalId={searchParams.get('id')} />;
@@ -89,7 +125,7 @@ export default function App() {
     return <PublicInvoiceView invoiceId={searchParams.get('id')} />;
   }
   if (searchParams.get('mode') === 'sales-room') {
-    return <SalesRoomView leadId={searchParams.get('id')} />;
+    return <SalesRoomView leadId={searchParams.get('id')} token={searchParams.get('token')} />;
   }
   if (searchParams.get('mode') === 'onboarding') {
     return <ClientOnboardingPortal leadId={searchParams.get('id')} />;
@@ -109,6 +145,10 @@ export default function App() {
   }
 
   if (!user) {
+    if (authMode === 'landing') {
+       return <MarketingLanding onLogin={() => setAuthMode('login')} />;
+    }
+
     const handleEmailAuth = async (e: React.FormEvent) => {
       e.preventDefault();
       setAuthError('');
@@ -236,6 +276,7 @@ export default function App() {
       
       <CommandPalette isOpen={paletteOpen} setIsOpen={setPaletteOpen} navigateTo={setActiveTab} />
       <ActivityTicker />
+      <NotificationCenter />
       <GodModeBackgroundWorker />
       
       {/* Background Ambient Glows */}
@@ -274,6 +315,7 @@ export default function App() {
           {activeTab === 'proposals' && <motion.div key="proposals" initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.99 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="w-full h-full flex-1 flex flex-col"><Proposals /></motion.div>}
           {activeTab === 'contracts' && <motion.div key="contracts" initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.99 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="w-full h-full flex-1 flex flex-col"><Contracts /></motion.div>}
           {activeTab === 'agents' && <motion.div key="agents" initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.99 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="w-full h-full flex-1 flex flex-col"><AIAgents /></motion.div>}
+          {activeTab === 'scripts' && <motion.div key="scripts" initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.99 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="w-full h-full flex-1 flex flex-col"><ScriptWriter /></motion.div>}
           {activeTab === 'assets' && <motion.div key="assets" initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.99 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="w-full h-full flex-1 flex flex-col"><AssetsHub /></motion.div>}
           {activeTab === 'prospector' && <motion.div key="prospector" initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.99 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="w-full h-full flex-1 flex flex-col"><Prospector /></motion.div>}
           {activeTab === 'outreach' && <motion.div key="outreach" initial={{ opacity: 0, y: 10, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.99 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="w-full h-full flex-1 flex flex-col"><Outreach /></motion.div>}

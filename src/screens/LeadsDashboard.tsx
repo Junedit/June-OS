@@ -382,6 +382,25 @@ const LeadDetailsModal = ({ lead: initialLead, onClose, defaultTab = 'contact' }
   const [roastUrl, setRoastUrl] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+  const copyMagicLink = async (targetLeadId: string, mode: string, typeName: string) => {
+    try {
+      const res = await fetch('/api/generate-magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId: targetLeadId, viewType: mode })
+      });
+      const data = await res.json();
+      if (data.url) {
+          navigator.clipboard.writeText(data.url.replace("ais-dev", "ais-pre"));
+          toast.success(`${typeName} magic link copied!`);
+      } else {
+          throw new Error(data.error);
+      }
+    } catch(e) {
+      toast.error(`Failed to generate link for ${typeName}`);
+    }
+  };
+
   const logActivity = async (text: string, type: 'note' | 'status_change' | 'task_completed' | 'file_upload' = 'note', metadata?: string) => {
     if (!user) return;
     try {
@@ -1902,8 +1921,7 @@ ${invoiceText}
                       <div className="flex flex-col gap-2 mt-1">
                           <div className="flex items-center gap-2 group">
                             <button onClick={() => {
-                              navigator.clipboard.writeText(`${window.location.origin.replace("ais-dev", "ais-pre")}/?mode=sales-room&id=${lead.id}`);
-                              toast.success("Sales Room link copied!");
+                              copyMagicLink(lead.id, 'sales-room', 'Sales Room');
                             }} className="flex-1 text-sm text-white/80 hover:text-white transition-colors flex items-center gap-2 text-left">
                                <div className="w-6 h-6 rounded bg-white/10 text-zinc-100 flex items-center justify-center group-hover:bg-white/20"><MonitorPlay size={12}/></div>
                                <span>Copy Sales Room</span>
@@ -1914,8 +1932,7 @@ ${invoiceText}
                           </div>
                           <div className="flex items-center gap-2 group">
                             <button onClick={() => {
-                              navigator.clipboard.writeText(`${window.location.origin.replace("ais-dev", "ais-pre")}/?mode=onboarding&id=${lead.id}`);
-                              toast.success("Onboarding link copied!");
+                              copyMagicLink(lead.id, 'onboarding', 'Onboarding');
                             }} className="flex-1 text-sm text-white/80 hover:text-white transition-colors flex items-center gap-2 text-left">
                                <div className="w-6 h-6 rounded bg-white/10 text-white/80 flex items-center justify-center group-hover:bg-white/20"><UploadCloud size={12}/></div>
                                <span>Copy Onboarding</span>
@@ -1926,8 +1943,7 @@ ${invoiceText}
                           </div>
                           <div className="flex items-center gap-2 group">
                             <button onClick={() => {
-                              navigator.clipboard.writeText(`${window.location.origin.replace("ais-dev", "ais-pre")}/?mode=video-review&id=${lead.id}`);
-                              toast.success("Video Review link copied!");
+                              copyMagicLink(lead.id, 'video-review', 'Video Review');
                             }} className="flex-1 text-sm text-white/80 hover:text-white transition-colors flex items-center gap-2 text-left">
                                <div className="w-6 h-6 rounded bg-white/10 text-white/80 flex items-center justify-center group-hover:bg-white/20"><Video size={12}/></div>
                                <span>Copy Video Review</span>
@@ -2791,20 +2807,17 @@ ${invoiceText}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin.replace("ais-dev", "ais-pre")}/?mode=sales-room&id=${lead.id}`);
-                    toast.success("Sales Room link copied!");
+                    copyMagicLink(lead.id, 'sales-room', 'Sales Room');
                   }} className="text-xs text-white/60 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded flex items-center gap-2">
                     <MonitorPlay size={12}/> Copy Sales Room
                   </button>
                   <button onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin.replace("ais-dev", "ais-pre")}/?mode=onboarding&id=${lead.id}`);
-                    toast.success("Onboarding link copied!");
+                    copyMagicLink(lead.id, 'onboarding', 'Onboarding');
                   }} className="text-xs text-white/60 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded flex items-center gap-2">
                     <UploadCloud size={12}/> Copy Onboarding
                   </button>
                   <button onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin.replace("ais-dev", "ais-pre")}/?mode=video-review&id=${lead.id}`);
-                    toast.success("Video Review link copied!");
+                    copyMagicLink(lead.id, 'video-review', 'Video Review');
                   }} className="text-xs text-white/60 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded flex items-center gap-2">
                     <Video size={12}/> Copy Video Review
                   </button>

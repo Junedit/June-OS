@@ -30,8 +30,9 @@ type Comment = {
   drawingData?: string;
 };
 
-export default function ClientVideoReviewHub({ leadId }: { leadId?: string | null }) {
+export default function ClientVideoReviewHub({ leadId, token }: { leadId?: string | null; token?: string | null }) {
   const { user } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lead, setLead] = useState<any>(null);
   const [approvalStatus, setApprovalStatus] = useState<'pending' | 'approved' | 'changes_requested'>('pending');
@@ -56,6 +57,18 @@ export default function ClientVideoReviewHub({ leadId }: { leadId?: string | nul
   const progressRef = useRef<HTMLDivElement>(null);
 
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
+
+  useEffect(() => {
+     if (token && leadId) {
+        fetch(`/api/verify-magic-link/${token}`)
+          .then(res => res.json())
+          .then(data => {
+             if (data.clientId === leadId) {
+                setIsAuthenticated(true);
+             }
+          }).catch(console.error);
+     }
+  }, [token, leadId]);
 
   useEffect(() => {
      if (leadId) {
@@ -266,6 +279,25 @@ ${textDump}`;
        setSynthesizing(false);
     }
   };
+
+  if (!isAuthenticated && !user) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black p-10 font-body">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm bg-[#0a0a0a] p-10 rounded-2xl border border-white/[0.04] shadow-2xl text-center relative overflow-hidden"
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-[var(--brand-primary)]" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto bg-white/[0.04]">
+            <Lock size={32} className="text-white/40" />
+          </div>
+          <h2 className="text-white font-bold text-2xl mb-2 font-body tracking-tight tracking-tight">Secure Access Required</h2>
+          <p className="text-white/60 text-sm leading-relaxed font-mono">This link is protected. If you are the client, please use the magic link provided via your email or message.</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-brand-primary flex flex-col md:flex-row relative overflow-hidden">

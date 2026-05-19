@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, FunnelChart, Funnel, LabelList, Legend } from 'recharts';
-import { Activity, TrendingUp, DollarSign, Users, Target } from 'lucide-react';
+import { Activity, TrendingUp, DollarSign, Users, Target, Sparkles } from 'lucide-react';
 import { format, subMonths, startOfMonth } from 'date-fns';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -31,6 +31,8 @@ export default function AnalyticsHub() {
   const [ltvData, setLtvData] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -42,7 +44,7 @@ export default function AnalyticsHub() {
     let leads: any[] = [];
     let invoices: any[] = [];
 
-    const calculateAnalytics = () => {
+    const calculateAnalytics = async () => {
       // 1. Revenue Growth Over Time (Last 6 Months)
       const revData = [];
       for (let i = 5; i >= 0; i--) {
@@ -95,6 +97,37 @@ export default function AnalyticsHub() {
       ]);
       
       setLoading(false);
+
+      // Generate AI Summary
+      if (leads.length > 0 || invoices.length > 0) {
+        setGeneratingSummary(true);
+        try {
+          const statsPayload = {
+            totalLeads: leads.length,
+            closedLeads: statusCounts.closed,
+            avgDealSize: avgDealSize,
+            estimatedLTV: estimatedLTV,
+            recentRevenue: revData
+          };
+
+          const response = await fetch('/api/gemini/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: `Here are my latest agency analytics: ${JSON.stringify(statsPayload)}`,
+              systemInstruction: `You are an elite business analyst. Provide a short, punchy, 2-3 sentence summary of the agency's performance based on the analytics provided. Focus on revenue trend, conversion rate, and LTV. Do NOT use markdown. Start with a decisive verdict like "Growth is strong." or "Pipeline requires attention."`
+            })
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setAiSummary(data.text);
+          }
+        } catch (err) {
+          console.error("AI summary error:", err);
+        } finally {
+          setGeneratingSummary(false);
+        }
+      }
     };
 
     const unsubLeads = onSnapshot(leadsQ, (snap) => {
@@ -129,6 +162,25 @@ export default function AnalyticsHub() {
            Deep Analytics
         </h1>
         <p className="text-white/60 text-sm">Real-time performance evaluation and pipeline velocity.</p>
+      </div>
+
+      <div className="glass-panel p-6 rounded-[24px] bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[var(--brand-primary)]/20 shadow-[0_0_30px_rgba(0,239,209,0.05)]">
+        <h2 className="text-sm font-bold text-white mb-3 uppercase tracking-[0.1em] font-mono flex items-center gap-2">
+          <Sparkles size={16} className="text-[#00EFD1]" />
+          AI Performance Summary
+        </h2>
+        {generatingSummary ? (
+          <div className="flex items-center gap-3 text-white/50 text-sm font-mono animate-pulse">
+            <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"></span>
+            <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce delay-100"></span>
+            <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce delay-200"></span>
+            Generating weekly insights...
+          </div>
+        ) : (
+          <p className="text-white/80 text-sm leading-relaxed font-body">
+            {aiSummary || "No substantial data to analyze yet."}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -123,6 +123,62 @@ async function startServer() {
     }
   });
 
+  app.post("/api/gemini/generate", async (req, res) => {
+    try {
+      const { prompt, systemInstruction } = req.body;
+      const key = process.env.GEMINI_API_KEY;
+      if (!key) {
+        throw new Error('GEMINI_API_KEY environment variable is missing.');
+      }
+      
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({
+        apiKey: key,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: prompt,
+        config: systemInstruction ? { systemInstruction } : undefined,
+      });
+      
+      res.json({ text: response.text });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ error: error.message || "Failed to generate content" });
+    }
+  });
+
+  // Simple in-memory store for magic links
+  const magicLinks = new Map<string, string>();
+
+  app.post("/api/generate-magic-link", async (req, res) => {
+    try {
+      const { clientId, viewType } = req.body;
+      const { v4: uuidv4 } = await import('uuid');
+      const token = uuidv4();
+      
+      magicLinks.set(token, JSON.stringify({ clientId, viewType }));
+      
+      // In a real app we'd email this. Here we just return it so it can be copied.
+      res.json({ token, url: `${req.headers.origin || 'http://localhost:3000'}/?mode=${viewType}&id=${clientId}&token=${token}` });
+    } catch(e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get("/api/verify-magic-link/:token", (req, res) => {
+    const dataStr = magicLinks.get(req.params.token);
+    if (!dataStr) return res.status(404).json({ error: "Invalid or expired token" });
+    
+    res.json(JSON.parse(dataStr));
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

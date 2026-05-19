@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { FileSignature, PenTool, CheckCircle, Loader2, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function PublicContractView({ contractId }: { contractId: string | null }) {
+export default function PublicContractView({ contractId, token }: { contractId: string | null, token?: string | null }) {
   const [contract, setContract] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,9 +28,28 @@ export default function PublicContractView({ contractId }: { contractId: string 
         if (docSnap.exists()) {
           const data = { id: docSnap.id, ...docSnap.data() } as any;
           setContract(data);
+          
+          let authed = false;
           if (!data.password) {
-            setIsAuthenticated(true);
+            authed = true;
+          } else if (token) {
+             try {
+                const res = await fetch(`/api/verify-magic-link/${token}`);
+                if (res.ok) {
+                   const verification = await res.json();
+                   if (verification.clientId === contractId) {
+                      authed = true;
+                      toast.success("Authenticated via magic link");
+                   }
+                }
+             } catch(e) {
+                console.error("Magic link err", e);
+             }
           }
+          if (authed) {
+             setIsAuthenticated(true);
+          }
+
           if (data.leadId && !window.location.search.includes('preview')) {
             try {
               const { arrayUnion, addDoc, collection } = await import('firebase/firestore');

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import SignatureCanvas from 'react-signature-canvas';
 import { pommerLeadFallback } from '../seedPommer';
 
-export default function SalesRoomView({ leadId }: { leadId: string | null }) {
+export default function SalesRoomView({ leadId, token }: { leadId: string | null, token?: string | null }) {
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSigning, setIsSigning] = useState(false);
@@ -18,6 +18,19 @@ export default function SalesRoomView({ leadId }: { leadId: string | null }) {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   const sigPadRef = useRef<SignatureCanvas>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+     if (token) {
+        fetch(`/api/verify-magic-link/${token}`)
+          .then(res => res.json())
+          .then(data => {
+             if (data.clientId === leadId) {
+                setIsAuthenticated(true);
+             }
+          }).catch(console.error);
+     }
+  }, [token, leadId]);
 
   useEffect(() => {
     if (chatOpen && chatMessagesEndRef.current) {

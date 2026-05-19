@@ -317,10 +317,23 @@ ${redlineInputText}`;
                  </button>
              )}
              {editingId && editForm.id && (
-                 <button onClick={() => {
-                     const url = `${window.location.origin}/?mode=contract&id=${editForm.id}`;
-                     navigator.clipboard.writeText(url);
-                     toast.success("Client link copied!");
+                 <button onClick={async () => {
+                     try {
+                         const res = await fetch('/api/generate-magic-link', {
+                             method: 'POST',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ clientId: editForm.id, viewType: 'contract' })
+                         });
+                         const data = await res.json();
+                         if (data.url) {
+                             navigator.clipboard.writeText(data.url);
+                             toast.success("Client magic link copied!");
+                         } else {
+                             throw new Error(data.error || "Unknown error");
+                         }
+                     } catch (e: any) {
+                         toast.error("Failed to generate magic link: " + e.message);
+                     }
                  }} className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-200 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-[0.2em] transition-all shadow-sm flex items-center gap-2">
                    <Link size={14} /> Copy Link
                  </button>

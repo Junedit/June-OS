@@ -65,20 +65,28 @@ export default function Outreach() {
   };
 
   const handleAIGenerateSequence = async () => {
+    if (!targetIndustry) {
+       toast.error("Please provide a target niche/industry first.");
+       return;
+    }
     setGeneratingSequence(true);
     try {
-      const ai = getAI();
-      if(!ai) throw new Error("AI off");
-      const res = await generateContentWithRetry(ai, {
-        model: "gemini-3.1-pro-preview",
-        contents: "You are an expert cold email prospector. Generate a 3-step drip campaign sequence focused on video editing and content scaling for YouTubers/brands. Step 1 happens Day 1, Step 2 on Day 4, Step 3 (breakup) on Day 7. Output MUST be valid JSON (no markdown): [{\"day\":1,\"subject\":\"...\",\"body\":\"...\"},{\"day\":4,\"subject\":\"...\",\"body\":\"...\"},{\"day\":7,\"subject\":\"...\",\"body\":\"...\"}]"
+      const response = await fetch('/api/gemini/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Find exactly 3 of the biggest current trending topics or pain points in the ${targetIndustry} industry. Then, use those insights to write a hyper-personalized 3-step cold email drip sequence to win them over for a video editing retainer. Step 1 (Day 1) mentions trend 1. Step 2 (Day 4) mentions trend 2. Step 3 (breakup on Day 7) mentions trend 3. Output MUST be ONLY valid JSON (no markdown wrapping) in this array format: [{"day":1,"subject":"...","body":"..."},{"day":4,"subject":"...","body":"..."},{"day":7,"subject":"...","body":"..."}]`,
+          systemInstruction: 'You are an elite B2B salesperson.'
+        })
       });
-      let textResponse = res.text().trim();
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      let textResponse = data.text.trim();
       if (textResponse.startsWith('```json')) textResponse = textResponse.replace(/```json\n?/, '').replace(/```$/, '');
       const parsed = JSON.parse(textResponse);
       setSequenceSteps(parsed);
-      toast.success("AI Sequence Generated! Review and save.");
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+      toast.success("Hyper-personalized trending sequence generated!");
     } catch(e) {
       toast.error("AI Generation failed.");
     } finally {

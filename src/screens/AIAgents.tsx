@@ -195,12 +195,6 @@ export default function AIAgents() {
     const promptText = suggestionOverride || input;
     if (!promptText.trim() || !user) return;
     
-    const aiClient = getAI();
-    if (!aiClient) {
-      toast.error('AI client unavailable.');
-      return;
-    }
-
     const userPrompt = promptText;
     if (!suggestionOverride) {
       setInput('');
@@ -299,13 +293,22 @@ Format:
         configOverride = { tools: [{ googleSearch: {} }] };
       }
 
-      const response = await aiClient.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
-        contents: `System Instructions: ${systemPrompt}\n\nUser Request: ${userPrompt}`,
-        config: configOverride
+      const response = await fetch('/api/gemini/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `System Instructions: ${systemPrompt}\n\nUser Request: ${userPrompt}`,
+          systemInstruction: systemPrompt
+        })
       });
+      
+      const data = await response.json();
 
-      const responseText = response.text || 'No response generated.';
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate response');
+      }
+
+      const responseText = data.text || 'No response generated.';
       setHistory(prev => [...prev, { role: 'agent', text: responseText }]);
 
     } catch (e: any) {
